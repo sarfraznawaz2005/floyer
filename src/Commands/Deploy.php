@@ -30,6 +30,15 @@ class Deploy extends Command
         self::HISTORY => 'List files deployed in previous deployment.',
     ];
 
+    // vars
+    protected $revFile = '.rev_floyer';
+    protected $zipFile = 'deployment_floyer.zip';
+    protected $lastCommitId = '';
+    protected $lastCommitIdRemote = '';
+
+    /**
+     * Configure Command
+     */
     protected function configure()
     {
         $this->setName($this->commandName);
@@ -39,8 +48,25 @@ class Deploy extends Command
         foreach ($this->options as $name => $description) {
             $this->addOption($name, null, InputOption::VALUE_NONE, $description);
         }
+
+        $this->init();
     }
 
+    /**
+     * Initialization stuff.
+     */
+    protected function init()
+    {
+
+    }
+
+    /**
+     * Execute console command.
+     *
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return mixed
+     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $isSync = $input->getOption($this->options[static::SYNC]);
@@ -60,29 +86,35 @@ class Deploy extends Command
         $output->writeln('xxxx');
     }
 
+    /**
+     * Starts deployment process
+     */
     protected function processDeployment()
     {
 
     }
 
+    /**
+     * Synchronize last local commit id with remote revision file.
+     */
     protected function sync()
     {
 
     }
 
+    /**
+     * Rollback previous deployment.
+     */
     protected function rollback()
     {
 
     }
 
+    /**
+     * List files deployed in previous deployment.
+     */
     protected function history()
     {
 
-    }
-
-    protected function dd($var)
-    {
-        var_dump($var);
-        die();
     }
 }
