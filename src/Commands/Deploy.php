@@ -57,7 +57,7 @@ class Deploy extends Command
      */
     protected function init()
     {
-
+        set_time_limit(0);
     }
 
     /**
