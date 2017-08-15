@@ -1,0 +1,27 @@
+{
+  "name": "sarfraznawaz2005/floyer",
+  "description": "Simple deployment tool using git and FTP - especially useful for shared hosting.",
+  "keywords": [
+    "deploy",
+    "deployer",
+    "ftp",
+    "git"
+  ],
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Sarfraz Ahmed",
+      "email": "sarfraznawaz2005@gmail.com"
+    }
+  ],
+  "minimum-stability": "stable",
+  "require": {
+    "symfony/console": "^3.3"
+  },
+  "autoload": {
+    "psr-4": {
+      "Sarfraznawaz2005\\Floyer\\": "src/"
+    }
+  }
+}
