@@ -24,5 +24,8 @@
     "psr-4": {
       "Sarfraznawaz2005\\Floyer\\": "src/"
     }
-  }
+  },
+  "bin": [
+    "bin/floyer"
+  ]
 }

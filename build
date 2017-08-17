@@ -1,0 +1,54 @@
+#!/usr/bin/env php
+<?php
+
+$filename = 'floyer.phar';
+$output_dir = __DIR__ . '/dist/';
+$output_file = $output_dir . $filename;
+
+// Remove existing file, recursively create directories if needed
+@unlink($output_file);
+@mkdir($output_dir, 0755, true);
+
+// If vendors directory doesn't exist, try to install with composer
+if (! is_dir(__DIR__ . '/vendor')) {
+    @shell_exec('composer --working-dir="' . __DIR__ . '" install');
+}
+
+// Start phar
+$phar = new Phar(
+    $output_file,
+    FilesystemIterator::CURRENT_AS_FILEINFO | FilesystemIterator::KEY_AS_FILENAME,
+    $filename
+);
+
+$phar->startBuffering();
+
+// Adding folders
+// https://bugs.php.net/bug.php?id=58169
+$phar->buildFromDirectory(
+    dirname(__FILE__), 
+    '/(vendor\/composer|vendor\/league|vendor\/phpseclib|vendor\/seld)\/.*/'
+);
+
+// Adding main file
+$phar->addFile('floyer.php');
+$phar->addFile('src/Commands/Deploy.php');
+$phar->addFile('src/Connectors/FTP.php');
+$phar->addFile('src/Contracts/ConnectorInterface.php');
+$phar->addFile('src/Contracts/DriverInterface.php');
+$phar->addFile('src/Drivers/Base.php');
+$phar->addFile('src/Drivers/Git.php');
+$phar->addFile('src/Traits/IO.php');
+$phar->addFile('src/Traits/Options.php');
+$phar->addFile('vendor/autoload.php');
+
+// Create a stub and add the shebang
+$default = $phar->createDefaultStub('floyer.php');
+$stub = "#!/usr/bin/env php \n" . $default;
+$phar->setStub($stub);
+
+$phar->compressFiles(Phar::GZ);
+$phar->stopBuffering();
+
+// Set file permissions
+chmod($output_file, 0755);
