@@ -8,8 +8,7 @@
 
 namespace Sarfraznawaz2005\Floyer\Commands;
 
-use Sarfraznawaz2005\Floyer\Contracts\ConnectorInterface;
-use Sarfraznawaz2005\Floyer\Contracts\DriverInterface;
+use Sarfraznawaz2005\Floyer\Traits\Options;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -18,6 +17,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class Deploy extends Command
 {
+    use Options;
+
     protected $commandName = 'deploy';
     protected $commandDescription = "Starts deployment process.";
 
@@ -32,18 +33,6 @@ class Deploy extends Command
         self::ROLLBACK => 'Rollback previous deployment.',
         self::HISTORY => 'List files deployed in previous deployment.',
     ];
-
-    // vars
-    protected $driver = null;
-    protected $connector = null;
-
-    public function __construct(DriverInterface $driver, ConnectorInterface $connector)
-    {
-        $this->driver = $driver;
-        $this->connector = $connector;
-
-        parent::__construct();
-    }
 
     /**
      * Configure Command
@@ -78,25 +67,62 @@ class Deploy extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $output->writeln('<fg=black;bg=green>-------------------------------------------------</>');
-        $output->writeln('<fg=black;bg=green>|                     Floyer                    |</>');
-        $output->writeln('<fg=black;bg=green>-------------------------------------------------</>');
+        $io = new SymfonyStyle($input, $output);
 
-        $this->driver->setIO(new SymfonyStyle($input, $output));
-        $this->driver->init($this->connector);
+        $this->floyer($output);
+
+        $currentDirectory = getcwd();
+
+        if (!file_exists("$currentDirectory/.git")) {
+            $this->io->writeln("<fg=red>'{$currentDirectory}' is not a Git repository.</>");
+            exit;
+        }
+
+        $options = $this->getOptions();
+
+        if (!isset($options['driver'])) {
+            $this->io->writeln("<fg=red>Driver is not specified in config file!</>");
+            exit;
+        }
+
+        if (!isset($options['connector'])) {
+            $this->io->writeln("<fg=red>Connector is not specified in config file!</>");
+            exit;
+        }
+
+        $class = 'Sarfraznawaz2005\Floyer\Drivers\\' . $options['driver'];
+        $driver = new $class;
+
+        $class = 'Sarfraznawaz2005\Floyer\Connectors\\' . $options['connector'];
+        $connector = new $class;
+        $connector->setOptions($options);
+        $connector->connect();
+
+        $driver->setIO($io);
+        $driver->init($connector);
 
         $isSync = $input->getOption(static::SYNC);
         $isRollback = $input->getOption(static::ROLLBACK);
         $isHistory = $input->getOption(static::HISTORY);
 
         if ($isSync) {
-            $this->driver->sync();
+            $driver->sync();
         } elseif ($isRollback) {
-            $this->driver->rollback();
+            $driver->rollback();
         } elseif ($isHistory) {
-            $this->driver->history();
+            $driver->history();
         } else {
-            $this->driver->processDeployment();
+            $driver->processDeployment();
         }
+    }
+
+    /**
+     * @param OutputInterface $output
+     */
+    protected function floyer(OutputInterface $output)
+    {
+        $output->writeln('<fg=black;bg=green>-------------------------------------------------</>');
+        $output->writeln('<fg=black;bg=green>|                     Floyer                    |</>');
+        $output->writeln('<fg=black;bg=green>-------------------------------------------------</>');
     }
 }

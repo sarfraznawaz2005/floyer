@@ -12,15 +12,18 @@ use League\Flysystem\Adapter\Ftp as FtpAdapter;
 use League\Flysystem\Filesystem;
 use Sarfraznawaz2005\Floyer\Contracts\ConnectorInterface;
 
-class FTP extends Base implements ConnectorInterface
+class FTP implements ConnectorInterface
 {
-    /**
-     * Connect to FTP/SFTP/etc
-     */
+    protected $connector = null;
+    protected $options = [];
+
+    function setOptions($options)
+    {
+        $this->options = $options;
+    }
+
     function connect()
     {
-        $this->init();
-
         try {
             $this->connector = new Filesystem(new FtpAdapter($this->options));
         } catch (\Exception $e) {

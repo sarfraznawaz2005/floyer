@@ -10,9 +10,8 @@ namespace Sarfraznawaz2005\Floyer\Contracts;
 
 interface ConnectorInterface
 {
-    /**
-     * Connect to FTP/SFTP/etc
-     */
+    function setOptions($options);
+
     function connect();
 
     function upload($path, $overwrite = true);

@@ -2,22 +2,18 @@
 /**
  * Created by PhpStorm.
  * User: Sarfraz
- * Date: 8/16/2017
- * Time: 4:21 PM
+ * Date: 8/17/2017
+ * Time: 11:56 PM
  */
 
-namespace Sarfraznawaz2005\Floyer\Connectors;
+namespace Sarfraznawaz2005\Floyer\Traits;
 
-Abstract class Base
+trait Options
 {
     protected $repo = '';
     protected $iniFileName = 'floyer.ini';
 
-    public $options = [];
-
-    protected $connector = null;
-
-    public function init()
+    public function getOptions()
     {
         $this->repo = getcwd();
 
@@ -32,11 +28,6 @@ Abstract class Base
             'timeout' => null,
             'ssl' => false,
         ];
-
-        if (!file_exists("$this->repo/.git")) {
-            $this->error("'{$this->repo}' is not a Git repository.");
-            exit;
-        }
 
         $iniFile = $this->repo . DIRECTORY_SEPARATOR . $this->iniFileName;
 
@@ -55,7 +46,7 @@ Abstract class Base
         $options['domain'] = $this->addSlashIfMissing($options['domain']);
         $options['public_path'] = $this->addSlashIfMissing($options['public_path']);
 
-        $this->options = $options;
+        return $options;
     }
 
     protected function parseIniFile($iniFile)

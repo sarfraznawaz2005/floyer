@@ -151,7 +151,15 @@ class Git extends Base implements DriverInterface
      */
     function lastCommitIdRemote()
     {
-        // TODO: Implement lastCommitIdRemote() method.
+        $exists = $this->connector->exists($this->revFile);
+
+        if (!$exists) {
+            $this->connector->write($this->revFile, $this->lastCommitId);
+        }
+
+        $lastCommidId = $this->connector->read($this->revFile);
+
+        return $lastCommidId;
     }
 
     /**
@@ -162,7 +170,6 @@ class Git extends Base implements DriverInterface
         $localCommitId = $this->lastCommitId;
         $this->lastCommitIdRemote = $remoteCommitId = $this->lastCommitIdRemote();
 
-        /*
         if (!trim($localCommitId)) {
             $this->error('No local commit id found.');
             exit;
@@ -178,7 +185,6 @@ class Git extends Base implements DriverInterface
             $this->text("No files to upload!");
             exit;
         }
-        */
 
         $command = "git diff -r --no-commit-id --name-only --diff-filter=ACMRT $remoteCommitId $localCommitId";
 

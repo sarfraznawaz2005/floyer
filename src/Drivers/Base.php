@@ -29,7 +29,6 @@ Abstract class Base
     public function init(ConnectorInterface $connector)
     {
         $this->connector = $connector;
-        $this->connector->connect();
 
         $this->lastCommitId = $this->lastCommitIdLocal();
     }
