@@ -30,7 +30,7 @@ class FTP implements ConnectorInterface
 
     function upload($path, $destination, $overwrite = true)
     {
-        if ($overwrite && $this->exists($destination . '/' . basename($path))) {
+        if ($overwrite && $this->existsAt($destination . '/' . basename($path))) {
             $this->delete($destination . '/' . basename($path));
         }
 
@@ -44,6 +44,11 @@ class FTP implements ConnectorInterface
     function exists($path)
     {
         return $this->connector->has(basename($path));
+    }
+
+    function existsAt($path)
+    {
+        return $this->connector->has($path);
     }
 
     function delete($path)

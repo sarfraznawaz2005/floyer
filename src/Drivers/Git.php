@@ -47,9 +47,6 @@ class Git extends Base implements DriverInterface
                 exit;
             }
 
-            // delete script file if already there
-            @$this->connector->deleteAt($this->options['public_path'] . $this->extractScriptFile);
-
             // upload extract zip script on server
             file_put_contents($this->extractScriptFile, $this->extractScript());
             $uploadStatus = $this->connector->upload($this->extractScriptFile, $this->options['public_path']);
@@ -58,8 +55,6 @@ class Git extends Base implements DriverInterface
                 $this->error('Could not upload script file.');
                 exit;
             }
-
-            @unlink($this->extractScriptFile);
 
             $response = file_get_contents($this->options['domain'] . $this->options['public_path'] . $this->extractScriptFile);
 
@@ -90,6 +85,7 @@ class Git extends Base implements DriverInterface
         }
 
         @unlink($this->zipFile);
+        @unlink($this->extractScriptFile);
     }
 
     /**
