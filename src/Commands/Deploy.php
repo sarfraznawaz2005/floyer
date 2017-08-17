@@ -95,7 +95,6 @@ class Deploy extends Command
 
         $class = 'Sarfraznawaz2005\Floyer\Connectors\\' . $options['connector'];
         $connector = new $class;
-        $connector->setOptions($options);
         $connector->connect();
 
         $driver->setIO($io);

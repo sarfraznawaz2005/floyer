@@ -10,15 +10,15 @@ namespace Sarfraznawaz2005\Floyer\Contracts;
 
 interface ConnectorInterface
 {
-    function setOptions($options);
-
     function connect();
 
-    function upload($path, $overwrite = true);
+    function upload($path, $destination, $overwrite = true);
 
     function exists($path);
 
     function delete($path);
+
+    function deleteAt($path);
 
     function write($path, $contents, $overwrite = true);
 

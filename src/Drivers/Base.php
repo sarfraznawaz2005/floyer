@@ -10,10 +10,12 @@ namespace Sarfraznawaz2005\Floyer\Drivers;
 
 use Sarfraznawaz2005\Floyer\Contracts\ConnectorInterface;
 use Sarfraznawaz2005\Floyer\Traits\IO;
+use Sarfraznawaz2005\Floyer\Traits\Options;
 
 Abstract class Base
 {
     use IO;
+    use Options;
 
     protected $lastCommitId = '';
     protected $lastCommitIdRemote = '';
@@ -24,6 +26,7 @@ Abstract class Base
     // console-related
     public $io = null;
 
+    protected $options = [];
     protected $connector = null;
 
     public function init(ConnectorInterface $connector)
@@ -31,16 +34,18 @@ Abstract class Base
         $this->connector = $connector;
 
         $this->lastCommitId = $this->lastCommitIdLocal();
+
+        $this->options = $this->getOptions();
     }
 
     public function exec($command)
     {
-        return shell_exec('(' . escapeshellcmd($command) . ') 2>&1');
+        return shell_exec(escapeshellcmd($command) . ' 2>&1');
     }
 
     protected function extractScript()
     {
-        $root = $this->connector->options['root'];
+        $root = $this->options['root'];
 
         $zipFile = $this->zipFile;
 

@@ -40,33 +40,32 @@ class Git extends Base implements DriverInterface
             // upload zip
             $this->success('Uploading archive file...');
 
-            $uploadStatus = $this->connector->upload($this->zipFile);
+            $uploadStatus = $this->connector->upload($this->zipFile, $this->options['root']);
 
             if (!$uploadStatus) {
                 $this->error('Could not upload archive file.');
                 exit;
             }
 
+            // delete script file if already there
+            @$this->connector->deleteAt($this->options['public_path'] . $this->extractScriptFile);
+
             // upload extract zip script on server
-            $rootPath = $this->connector->options['root'];
-            $this->connector->options['root'] = $this->connector->options['public_path'];
-            $this->connector->connect();
-            $uploadStatus = $this->connector->write($this->extractScriptFile, $this->extractScript());
+            file_put_contents($this->extractScriptFile, $this->extractScript());
+            $uploadStatus = $this->connector->upload($this->extractScriptFile, $this->options['public_path']);
 
             if (!$uploadStatus) {
                 $this->error('Could not upload script file.');
                 exit;
             }
 
-            $response = file_get_contents($this->connector->options['domain'] . $this->extractScriptFile);
+            @unlink($this->extractScriptFile);
+
+            $response = file_get_contents($this->options['domain'] . $this->options['public_path'] . $this->extractScriptFile);
 
             if ($response === 'ok') {
                 // delete script file
-                $this->connector->delete($this->extractScriptFile);
-
-                $this->connector->options['root'] = $rootPath;
-                $this->connector->connect();
-
+                $this->connector->deleteAt($this->options['public_path'] . $this->extractScriptFile);
 
                 $this->success('Deploying changed files...');
 
@@ -102,7 +101,7 @@ class Git extends Base implements DriverInterface
         $this->success('Sync commit ID started...');
 
         // update .rev file with new commit id
-        $uploadStatus = false;
+        $uploadStatus = $this->connector->write($this->revFile, $this->lastCommitId);
 
         if (!$uploadStatus) {
             $this->error('Could not update revision file.');
@@ -187,6 +186,7 @@ class Git extends Base implements DriverInterface
         }
 
         $command = "git diff -r --no-commit-id --name-only --diff-filter=ACMRT $remoteCommitId $localCommitId";
+        //$this->line($command);
 
         return $this->exec($command);
     }

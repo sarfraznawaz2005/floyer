@@ -82,6 +82,6 @@ trait IO
 
     protected function confirm($text)
     {
-        return $this->io->confirm($text);
+        return $this->io->confirm($text, false);
     }
 }

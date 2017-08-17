@@ -11,34 +11,31 @@ namespace Sarfraznawaz2005\Floyer\Connectors;
 use League\Flysystem\Adapter\Ftp as FtpAdapter;
 use League\Flysystem\Filesystem;
 use Sarfraznawaz2005\Floyer\Contracts\ConnectorInterface;
+use Sarfraznawaz2005\Floyer\Traits\Options;
 
 class FTP implements ConnectorInterface
 {
-    protected $connector = null;
-    protected $options = [];
+    use Options;
 
-    function setOptions($options)
-    {
-        $this->options = $options;
-    }
+    protected $connector = null;
 
     function connect()
     {
         try {
-            $this->connector = new Filesystem(new FtpAdapter($this->options));
+            $this->connector = new Filesystem(new FtpAdapter($this->getOptions()));
         } catch (\Exception $e) {
             echo "\r\nOopps: {$e->getMessage()}\r\n";
         }
     }
 
-    function upload($path, $overwrite = true)
+    function upload($path, $destination, $overwrite = true)
     {
-        if ($overwrite && $this->exists($path)) {
-            $this->delete($path);
+        if ($overwrite && $this->exists($destination . '/' . basename($path))) {
+            $this->delete($destination . '/' . basename($path));
         }
 
         $stream = fopen($path, 'r+');
-        $result = $this->connector->writeStream(basename($path), $stream);
+        $result = $this->connector->writeStream($destination . '/' . basename($path), $stream);
         fclose($stream);
 
         return $result;
@@ -52,6 +49,11 @@ class FTP implements ConnectorInterface
     function delete($path)
     {
         return $this->connector->delete(basename($path));
+    }
+
+    function deleteAt($path)
+    {
+        return $this->connector->delete($path);
     }
 
     function write($path, $contents, $overwrite = true)
