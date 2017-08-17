@@ -9,44 +9,88 @@
 namespace Sarfraznawaz2005\Floyer\Drivers;
 
 use Sarfraznawaz2005\Floyer\Contracts\DriverInterface;
-use Sarfraznawaz2005\Floyer\Traits\IO;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-class Git implements DriverInterface
+class Git extends Base implements DriverInterface
 {
-    use IO;
-
-    protected $lastCommitId = '';
-    protected $lastCommitIdRemote = '';
-    protected $revFile = '.rev_floyer';
-    protected $zipFile = 'deployment_floyer.zip';
-
-    // console-related
-    public $io = null;
-
-    function init()
-    {
-        $this->lastCommitId = $this->lastCommitIdLocal();
-    }
-
-    /**
-     * Connect to FTP/SFTP/etc
-     */
-    function connect()
-    {
-
-    }
-
     /**
      * Starts deployment process
      */
     function processDeployment()
     {
-        $this->success('Getting list of changed files...');
+        $this->title('Getting list of changed files...');
 
         @unlink($this->zipFile);
 
         $this->line($this->filesToUpload());
+
+        if ($this->confirm('Above files will be uploaded, do you wish to continue?')) {
+            $this->successBG('Deployment Started');
+
+            // create zip
+            $this->success('Creating archive of files to upload...');
+            $this->createZipOfChangedFiles();
+
+            // check if zip exists locally
+            if (!file_exists($this->zipFile)) {
+                $this->error('Could not create archive file.');
+                exit;
+            }
+
+            // upload zip
+            $this->success('Uploading archive file...');
+
+            $uploadStatus = $this->connector->upload($this->zipFile);
+
+            if (!$uploadStatus) {
+                $this->error('Could not upload archive file.');
+                exit;
+            }
+
+            // upload extract zip script on server
+            $rootPath = $this->connector->options['root'];
+            $this->connector->options['root'] = $this->connector->options['public_path'];
+            $this->connector->connect();
+            $uploadStatus = $this->connector->write($this->extractScriptFile, $this->extractScript());
+
+            if (!$uploadStatus) {
+                $this->error('Could not upload script file.');
+                exit;
+            }
+
+            $response = file_get_contents($this->connector->options['domain'] . $this->extractScriptFile);
+
+            if ($response === 'ok') {
+                // delete script file
+                $this->connector->delete($this->extractScriptFile);
+
+                $this->connector->options['root'] = $rootPath;
+                $this->connector->connect();
+
+
+                $this->success('Deploying changed files...');
+
+                // delete deployment file
+                $this->connector->delete($this->zipFile);
+
+                // update .rev file with new commit id
+                $uploadStatus = $this->connector->write($this->revFile, $this->lastCommitId);
+
+                if (!$uploadStatus) {
+                    $this->error('Could not update revision file.');
+                    exit;
+                }
+
+                $this->successBG('Deployment Finished');
+            } else {
+                $this->error('Unknown Error!');
+            }
+
+        } else {
+            $this->warning('Deployment Skipped!');
+        }
+
+        @unlink($this->zipFile);
     }
 
     /**
@@ -61,7 +105,7 @@ class Git implements DriverInterface
         $uploadStatus = false;
 
         if (!$uploadStatus) {
-            $this->error('Count not update revision file.');
+            $this->error('Could not update revision file.');
             exit;
         }
 
@@ -99,7 +143,7 @@ class Git implements DriverInterface
      */
     function lastCommitIdLocal()
     {
-        return $this->runCommand('git rev-parse HEAD');
+        return $this->exec('git rev-parse HEAD');
     }
 
     /**
@@ -138,7 +182,7 @@ class Git implements DriverInterface
 
         $command = "git diff -r --no-commit-id --name-only --diff-filter=ACMRT $remoteCommitId $localCommitId";
 
-        return $this->runCommand($command);
+        return $this->exec($command);
     }
 
     /**
@@ -146,11 +190,15 @@ class Git implements DriverInterface
      */
     function createZipOfChangedFiles()
     {
-        // TODO: Implement createZipOfChangedFiles() method.
-    }
+        $localCommitId = $this->lastCommitId;
+        $remoteCommitId = $this->lastCommitIdRemote;
+        $zipName = $this->zipFile;
 
-    protected function runCommand($command)
-    {
-        return shell_exec($command . ' 2>&1');
+        $contents = "git archive --output=$zipName HEAD $(git diff -r --no-commit-id --name-only --diff-filter=ACMRT $remoteCommitId $localCommitId)";
+
+        file_put_contents('archive.sh', $contents);
+
+        exec('archive.sh', $result);
+        @unlink('archive.sh');
     }
 }

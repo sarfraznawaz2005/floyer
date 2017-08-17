@@ -8,6 +8,7 @@
 
 namespace Sarfraznawaz2005\Floyer\Commands;
 
+use Sarfraznawaz2005\Floyer\Contracts\ConnectorInterface;
 use Sarfraznawaz2005\Floyer\Contracts\DriverInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -34,10 +35,12 @@ class Deploy extends Command
 
     // vars
     protected $driver = null;
+    protected $connector = null;
 
-    public function __construct(DriverInterface $driver)
+    public function __construct(DriverInterface $driver, ConnectorInterface $connector)
     {
         $this->driver = $driver;
+        $this->connector = $connector;
 
         parent::__construct();
     }
@@ -75,8 +78,12 @@ class Deploy extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $output->writeln('<fg=black;bg=green>-------------------------------------------------</>');
+        $output->writeln('<fg=black;bg=green>|                     Floyer                    |</>');
+        $output->writeln('<fg=black;bg=green>-------------------------------------------------</>');
+
         $this->driver->setIO(new SymfonyStyle($input, $output));
-        $this->driver->init();
+        $this->driver->init($this->connector);
 
         $isSync = $input->getOption(static::SYNC);
         $isRollback = $input->getOption(static::ROLLBACK);

@@ -32,7 +32,7 @@ trait IO
 
     protected function successBG($text)
     {
-        $this->io->success($text);
+        $this->io->writeln('<fg=black;bg=green>' . $text . '</>');
     }
 
     protected function warning($text)

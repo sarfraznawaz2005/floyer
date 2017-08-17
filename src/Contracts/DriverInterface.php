@@ -21,13 +21,10 @@ interface DriverInterface
 
     /**
      * Initialize.
+     * @param ConnectorInterface $connector
+     * @return
      */
-    function init();
-
-    /**
-     * Connect to FTP/SFTP/etc
-     */
-    function connect();
+    function init(ConnectorInterface $connector);
 
     /**
      * Starts deployment process
