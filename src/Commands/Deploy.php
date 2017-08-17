@@ -8,10 +8,12 @@
 
 namespace Sarfraznawaz2005\Floyer\Commands;
 
+use Sarfraznawaz2005\Floyer\Contracts\DriverInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 class Deploy extends Command
 {
@@ -31,10 +33,14 @@ class Deploy extends Command
     ];
 
     // vars
-    protected $revFile = '.rev_floyer';
-    protected $zipFile = 'deployment_floyer.zip';
-    protected $lastCommitId = '';
-    protected $lastCommitIdRemote = '';
+    protected $driver = null;
+
+    public function __construct(DriverInterface $driver)
+    {
+        $this->driver = $driver;
+
+        parent::__construct();
+    }
 
     /**
      * Configure Command
@@ -65,56 +71,25 @@ class Deploy extends Command
      *
      * @param InputInterface $input
      * @param OutputInterface $output
-     * @return mixed
+     * @return int|null|void
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $isSync = $input->getOption($this->options[static::SYNC]);
-        $isRollback = $input->getOption($this->options[static::ROLLBACK]);
-        $isHistory = $input->getOption($this->options[static::HISTORY]);
+        $this->driver->setIO(new SymfonyStyle($input, $output));
+        $this->driver->init();
+
+        $isSync = $input->getOption(static::SYNC);
+        $isRollback = $input->getOption(static::ROLLBACK);
+        $isHistory = $input->getOption(static::HISTORY);
 
         if ($isSync) {
-            $this->sync();
+            $this->driver->sync();
         } elseif ($isRollback) {
-            $this->rollback();
+            $this->driver->rollback();
         } elseif ($isHistory) {
-            $this->history();
+            $this->driver->history();
         } else {
-            $this->processDeployment();
+            $this->driver->processDeployment();
         }
-
-        $output->writeln('xxxx');
-    }
-
-    /**
-     * Starts deployment process
-     */
-    protected function processDeployment()
-    {
-
-    }
-
-    /**
-     * Synchronize last local commit id with remote revision file.
-     */
-    protected function sync()
-    {
-
-    }
-
-    /**
-     * Rollback previous deployment.
-     */
-    protected function rollback()
-    {
-
-    }
-
-    /**
-     * List files deployed in previous deployment.
-     */
-    protected function history()
-    {
-
     }
 }
