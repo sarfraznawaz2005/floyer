@@ -193,7 +193,7 @@ class Git extends Base implements DriverInterface
 
         // if local and remoate commit ids are same, nothing to upload
         if ($localCommitId === $remoteCommitId) {
-            $this->text("No files to upload!");
+            $this->success("No files to upload!");
             exit;
         }
 
