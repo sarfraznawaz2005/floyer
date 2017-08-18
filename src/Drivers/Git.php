@@ -30,6 +30,16 @@ class Git extends Base implements DriverInterface
         if ($this->confirm('Above files will be uploaded, do you wish to continue?')) {
             $this->successBG('Deployment Started');
 
+            if (!$this->filesChanged) {
+                if ($this->filesToDelete) {
+                    $this->deleteFiles();
+                    $this->successBG('Deployment Finished');
+                } else {
+                    $this->warning('No files to deploy!');
+                }
+                exit;
+            }
+
             // create zip
             $this->success('Creating archive of files to upload...');
             $this->createZipOfChangedFiles();
@@ -70,15 +80,7 @@ class Git extends Base implements DriverInterface
                 $this->success('Deploying changed files...');
 
                 if ($this->filesToDelete) {
-                    foreach ($this->filesToDelete as $file) {
-                        $deleteStatus = $this->connector->deleteAt($file);
-
-                        if ($deleteStatus === true) {
-                            $this->success('Deleted: ' . $file);
-                        } else {
-                            $this->error("Could not delete '$file'. Reason: " . $deleteStatus);
-                        }
-                    }
+                    $this->deleteFiles();
                 }
 
                 // delete deployment file
@@ -238,7 +240,7 @@ class Git extends Base implements DriverInterface
             }
         }
 
-        if ($this->filesToDelete) {
+        if ($this->filesChanged) {
             $this->success('Following files will be uploaded:');
             $this->listing($this->filesChanged);
         }
@@ -271,6 +273,19 @@ class Git extends Base implements DriverInterface
         if (trim($gitStatus)) {
             $this->warning('Stash your modifications before deploying.');
             exit;
+        }
+    }
+
+    protected function deleteFiles()
+    {
+        foreach ($this->filesToDelete as $file) {
+            $deleteStatus = $this->connector->deleteAt($file);
+
+            if ($deleteStatus === true) {
+                $this->success('Deleted: ' . $file);
+            } else {
+                $this->error("Could not delete '$file'. Reason: " . $deleteStatus);
+            }
         }
     }
 }
