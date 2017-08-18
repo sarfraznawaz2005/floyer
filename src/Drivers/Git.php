@@ -70,9 +70,8 @@ class Git extends Base implements DriverInterface
                 $this->success('Deploying changed files...');
 
                 if ($this->filesToDelete) {
-
                     foreach ($this->filesToDelete as $file) {
-                        $deleteStatus = $this->connector->delete($file);
+                        $deleteStatus = $this->connector->deleteAt($file);
 
                         if ($deleteStatus === true) {
                             $this->success('Deleted: ' . $file);
