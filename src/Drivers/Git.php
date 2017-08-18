@@ -239,11 +239,11 @@ class Git extends Base implements DriverInterface
             }
         }
 
-        $this->success('Follwing files will be uploaded:');
+        $this->success('Following files will be uploaded:');
         $this->listing($this->filesChanged);
 
         if ($this->filesToDelete) {
-            $this->error('Follwing files will be deleted:');
+            $this->error('Following files will be deleted:');
 
             foreach ($this->filesToDelete as $file) {
                 $this->error('* ' . $file);
