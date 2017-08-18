@@ -60,6 +60,7 @@ class Git extends Base implements DriverInterface
                 exit;
             }
 
+
             $response = file_get_contents($this->options['domain'] . $this->options['public_path'] . $this->extractScriptFile);
 
             if ($response === 'ok') {
@@ -67,6 +68,19 @@ class Git extends Base implements DriverInterface
                 $this->connector->deleteAt($this->options['public_path'] . $this->extractScriptFile);
 
                 $this->success('Deploying changed files...');
+
+                if ($this->filesToDelete) {
+
+                    foreach ($this->filesToDelete as $file) {
+                        $deleteStatus = $this->connector->delete($file);
+
+                        if ($deleteStatus === true) {
+                            $this->success('Deleted: ' . $file);
+                        } else {
+                            $this->error("Could not delete '$file'. Reason: " . $deleteStatus);
+                        }
+                    }
+                }
 
                 // delete deployment file
                 $this->connector->delete($this->zipFile);
@@ -252,6 +266,7 @@ class Git extends Base implements DriverInterface
     function checkDirty()
     {
         $gitStatus = $this->exec('git checkout');
+        //echo $gitStatus;exit;
 
         if (strpos($gitStatus, 'error') !== 0) {
             $this->warning('Stash your modifications before deploying.');
