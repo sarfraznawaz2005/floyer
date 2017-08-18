@@ -21,6 +21,9 @@ class Git extends Base implements DriverInterface
         $this->title('Getting list of changed files...');
 
         @unlink($this->zipFile);
+        @unlink($this->extractScriptFile);
+
+        $this->checkDirty();
 
         $this->line($this->filesToUpload());
 
@@ -37,15 +40,7 @@ class Git extends Base implements DriverInterface
                 exit;
             }
 
-            // upload zip
-            $this->success('Uploading archive file...');
-
-            $uploadStatus = $this->connector->upload($this->zipFile, $this->options['root']);
-
-            if (!$uploadStatus) {
-                $this->error('Could not upload archive file.');
-                exit;
-            }
+            $this->success('Uploading extract files script...');
 
             // upload extract zip script on server
             file_put_contents($this->extractScriptFile, $this->extractScript());
@@ -53,6 +48,15 @@ class Git extends Base implements DriverInterface
 
             if (!$uploadStatus) {
                 $this->error('Could not upload script file.');
+                exit;
+            }
+
+            $this->success('Uploading zip archive of files changed...');
+
+            $uploadStatus = $this->connector->upload($this->zipFile, $this->options['root']);
+
+            if (!$uploadStatus) {
+                $this->error('Could not upload archive file.');
                 exit;
             }
 
@@ -152,9 +156,7 @@ class Git extends Base implements DriverInterface
             $this->connector->write($this->revFile, $this->lastCommitId);
         }
 
-        $lastCommidId = $this->connector->read($this->revFile);
-
-        return $lastCommidId;
+        return $this->connector->read($this->revFile);
     }
 
     /**
@@ -181,10 +183,58 @@ class Git extends Base implements DriverInterface
             exit;
         }
 
-        $command = "git diff -r --no-commit-id --name-only --diff-filter=ACMRT $remoteCommitId $localCommitId";
-        //$this->line($command);
+        /*
+         * Git Status Codes
+         *
+         * A: addition of a file
+         * C: copy of a file into a new one
+         * D: deletion of a file
+         * M: modification of the contents or mode of a file
+         * R: renaming of a file
+         * T: change in the type of the file
+         * U: file is unmerged (you must complete the merge before it can be committed)
+         * X: "unknown" change type (most probably a bug, please report it)
+         */
 
-        return $this->exec($command);
+        $command = 'git diff --name-status ' . $remoteCommitId . ' ' . $localCommitId;
+
+        $output = $this->exec($command);
+
+        $files = explode("\n", $output);
+
+        foreach ($files as $file) {
+
+            if (!$file) {
+                continue;
+            }
+
+            if (strpos($file, 'warning: CRLF will be replaced by LF in') !== false) {
+                continue;
+            } elseif (strpos($file, 'original line endings in your working directory.') !== false) {
+                continue;
+            }
+
+            $array = explode("\t", $file);
+            $type = $array[0];
+            $path = $array[1];
+
+            if ($type === 'A' || $type === 'C' || $type === 'M' || $type === 'T') {
+                $this->filesChanged[] = $path;
+            } elseif ($type === 'D') {
+                $this->filesToDelete = $path;
+            }
+        }
+
+        $this->success('Follwing files will be uploaded:');
+        $this->listing($this->filesChanged);
+
+        if ($this->filesToDelete) {
+            $this->error('Follwing files will be deleted:');
+
+            foreach ($this->filesToDelete as $file) {
+                $this->error('* ' . $file);
+            }
+        }
     }
 
     /**
@@ -192,15 +242,25 @@ class Git extends Base implements DriverInterface
      */
     function createZipOfChangedFiles()
     {
-        $localCommitId = $this->lastCommitId;
-        $remoteCommitId = $this->lastCommitIdRemote;
         $zipName = $this->zipFile;
 
-        $contents = "git archive --output=$zipName HEAD $(git diff -r --no-commit-id --name-only --diff-filter=ACMRT $remoteCommitId $localCommitId)";
+        $command = "git archive --output=$zipName HEAD " . implode(' ', $this->filesChanged);
 
-        file_put_contents('archive.sh', $contents);
+        exec($command);
+    }
 
-        exec('archive.sh', $result);
-        @unlink('archive.sh');
+    function checkDirty()
+    {
+        $gitStatus = $this->exec('git checkout');
+
+        if (strpos($gitStatus, 'error') !== 0) {
+            $this->warning('Stash your modifications before deploying.');
+            exit;
+        }
+
+        if (strpos($gitStatus, 'M' . "\t") !== 0) {
+            $this->warning('Stash your modifications before deploying.');
+            exit;
+        }
     }
 }

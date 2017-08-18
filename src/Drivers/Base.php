@@ -21,13 +21,16 @@ Abstract class Base
     protected $lastCommitIdRemote = '';
     protected $revFile = '.rev_floyer';
     protected $zipFile = 'deployment_floyer.zip';
-    protected $extractScriptFile = '__extract__.php';
+    protected $extractScriptFile = 'extract_floyer.php';
 
     // console-related
     public $io = null;
 
     protected $options = [];
     protected $connector = null;
+
+    protected $filesToDelete = [];
+    protected $filesChanged = [];
 
     public function init(ConnectorInterface $connector)
     {

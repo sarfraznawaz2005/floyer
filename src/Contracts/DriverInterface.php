@@ -65,4 +65,6 @@ interface DriverInterface
      * Creates zip file of files to upload.
      */
     function createZipOfChangedFiles();
+
+    function checkDirty();
 }

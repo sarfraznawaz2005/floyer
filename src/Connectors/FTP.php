@@ -30,12 +30,15 @@ class FTP implements ConnectorInterface
 
     function upload($path, $destination, $overwrite = true)
     {
-        if ($overwrite && $this->existsAt($destination . '/' . basename($path))) {
-            $this->delete($destination . '/' . basename($path));
+        $destination = $destination . '/' . basename($path);
+        $destination = str_replace('//', '/', $destination);
+
+        if ($overwrite && $this->existsAt($destination)) {
+            $this->deleteAt($destination);
         }
 
         $stream = fopen($path, 'r+');
-        $result = $this->connector->writeStream($destination . '/' . basename($path), $stream);
+        $result = $this->connector->writeStream($destination, $stream);
         fclose($stream);
 
         return $result;
