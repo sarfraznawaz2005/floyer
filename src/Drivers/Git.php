@@ -266,7 +266,6 @@ class Git extends Base implements DriverInterface
     function checkDirty()
     {
         $gitStatus = $this->exec('git status --porcelain');
-        $this->line($gitStatus);
 
         if (trim($gitStatus)) {
             $this->warning('Stash your modifications before deploying.');
