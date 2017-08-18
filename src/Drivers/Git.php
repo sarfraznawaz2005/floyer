@@ -235,12 +235,14 @@ class Git extends Base implements DriverInterface
             if ($type === 'A' || $type === 'C' || $type === 'M' || $type === 'T') {
                 $this->filesChanged[] = $path;
             } elseif ($type === 'D') {
-                $this->filesToDelete = $path;
+                $this->filesToDelete[] = $path;
             }
         }
 
-        $this->success('Following files will be uploaded:');
-        $this->listing($this->filesChanged);
+        if ($this->filesToDelete) {
+            $this->success('Following files will be uploaded:');
+            $this->listing($this->filesChanged);
+        }
 
         if ($this->filesToDelete) {
             $this->error('Following files will be deleted:');
