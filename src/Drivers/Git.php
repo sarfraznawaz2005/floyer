@@ -102,7 +102,52 @@ class Git extends Base implements DriverInterface
      */
     function rollback()
     {
-        $files = explode("\n", $this->history());
+        $this->history();
+
+        @unlink($this->zipFile);
+        @unlink($this->extractScriptFile);
+
+        if ($this->confirm('Do you want to proceed with rollback?')) {
+            $this->successBG('Rollback Started');
+
+            if (!$this->filesChanged) {
+                if ($this->filesToDelete) {
+                    $this->deleteFiles();
+                    $this->successBG('Rollback Finished');
+                } else {
+                    $this->warning('No files to rollback!');
+                }
+                exit;
+            }
+
+            $this->uploadDeployFiles();
+
+            $response = file_get_contents($this->options['domain'] . $this->options['public_path'] . $this->extractScriptFile);
+
+            if ($response === 'ok') {
+                // delete script file
+                $this->connector->deleteAt($this->options['public_path'] . $this->extractScriptFile);
+
+                $this->success('Deploying changed files...');
+
+                if ($this->filesToDelete) {
+                    $this->deleteFiles();
+                }
+
+                // delete deployment file
+                $this->connector->delete($this->zipFile);
+
+                $this->successBG('Rollback Finished');
+            } else {
+                $this->error('Unknown Error!');
+            }
+
+        } else {
+            $this->warning('Rollback Skipped!');
+        }
+
+        @unlink($this->zipFile);
+        @unlink($this->extractScriptFile);
     }
 
     /**
@@ -112,14 +157,19 @@ class Git extends Base implements DriverInterface
     {
         $this->title('Getting list of changed files in previous deployment:');
 
-        $remoteCommitId = 'cd994df2e0a7ff5b7c691000210a8c7ed42f57ce';
+        $localCommitId = $this->lastCommitIdLocal();
+        $remoteCommitId = $this->lastCommitIdRemote();
 
         if (!trim($remoteCommitId)) {
             $this->error('No remote commit id found.');
             exit;
         }
 
-        $command = 'git diff --name-status ' . $remoteCommitId;
+        // first rollback local file system back to last/remote commit id
+        $output = $this->exec('git checkout ' . $remoteCommitId);
+        $this->line($output);
+
+        $command = 'git diff-tree --no-commit-id --name-status -r ' . $remoteCommitId;
 
         $output = $this->exec($command);
 
@@ -157,6 +207,9 @@ class Git extends Base implements DriverInterface
             $this->error('Following files were deleted in previous deployment:');
             $this->listing($this->filesToDelete);
         }
+
+        $output = $this->exec('git master ' . $remoteCommitId);
+        $this->line($output);
     }
 
     /**
