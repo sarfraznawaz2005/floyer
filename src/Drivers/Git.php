@@ -40,10 +40,6 @@ class Git extends Base implements DriverInterface
                 exit;
             }
 
-            // create zip
-            $this->success('Creating archive of files to upload...');
-            $this->createZipOfChangedFiles();
-
             $this->uploadDeployFiles();
 
             $response = file_get_contents($this->options['domain'] . $this->options['public_path'] . $this->extractScriptFile);
@@ -124,10 +120,6 @@ class Git extends Base implements DriverInterface
                 exit;
             }
 
-            // create zip
-            $this->success('Creating archive of files to upload...');
-            $this->createZipOfChangedFiles($this->lastCommitIdRemote);
-
             $this->uploadDeployFiles();
 
             $response = file_get_contents($this->options['domain'] . $this->options['public_path'] . $this->extractScriptFile);
@@ -165,7 +157,7 @@ class Git extends Base implements DriverInterface
     {
         $this->title('Getting list of changed files in previous deployment:');
 
-        $this->lastCommitIdRemote = $remoteCommitId = $this->lastCommitIdRemote();
+        $remoteCommitId = $this->lastCommitIdRemote();
 
         if (!trim($remoteCommitId)) {
             $this->error('No remote commit id found.');
@@ -323,17 +315,12 @@ class Git extends Base implements DriverInterface
 
     /**
      * Creates zip file of files to upload.
-     * @param string $commitId
      */
-    function createZipOfChangedFiles($commitId = '')
+    function createZipOfChangedFiles()
     {
         $zipName = $this->zipFile;
 
-        if (!$commitId) {
-            $command = "git archive --output=$zipName HEAD " . implode(' ', $this->filesChanged);
-        } else {
-            $command = "git archive --output=$zipName $commitId";
-        }
+        $command = "git archive --output=$zipName HEAD " . implode(' ', $this->filesChanged);
 
         exec($command);
     }
@@ -366,6 +353,10 @@ class Git extends Base implements DriverInterface
      */
     protected function uploadDeployFiles()
     {
+        // create zip
+        $this->success('Creating archive of files to upload...');
+        $this->createZipOfChangedFiles();
+
         // check if zip exists locally
         if (!file_exists($this->zipFile)) {
             $this->error('Could not create archive file.');
