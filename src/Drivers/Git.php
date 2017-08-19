@@ -120,7 +120,27 @@ class Git extends Base implements DriverInterface
                 exit;
             }
 
+            // first rollback local file system back to last/remote commit id
+            $output = $this->exec('git checkout ' . $this->lastCommitIdRemote());
+
+            if (false === strpos($output, 'HEAD is now at')) {
+                $this->error('Could not checkout previous commit state.');
+                exit;
+            } elseif (false === strpos($output, 'overwritten by checkout')) {
+                $this->warning('Stash your modifications before deploying.');
+                exit;
+            }
+
             $this->uploadDeployFiles();
+
+            // back to our working file system
+            $output = $this->exec('git checkout master');
+            $this->line('$output:' . $output);
+
+            if (false === strpos($output, 'Switched to branch')) {
+                $this->error('Could not checkout previous commit state.');
+                exit;
+            }
 
             $response = file_get_contents($this->options['domain'] . $this->options['public_path'] . $this->extractScriptFile);
 
@@ -164,17 +184,6 @@ class Git extends Base implements DriverInterface
             exit;
         }
 
-        // first rollback local file system back to last/remote commit id
-        $output = $this->exec('git checkout ' . $remoteCommitId);
-
-        if (false === strpos($output, 'HEAD is now at')) {
-            $this->error('Could not checkout previous commit state.');
-            exit;
-        } elseif (false === strpos($output, 'overwritten by checkout')) {
-            $this->warning('Stash your modifications before deploying.');
-            exit;
-        }
-
         $command = 'git diff-tree --no-commit-id --name-status -r ' . $remoteCommitId;
 
         $output = $this->exec($command);
@@ -212,15 +221,6 @@ class Git extends Base implements DriverInterface
         if ($this->filesToDelete) {
             $this->error('Following files were deleted in previous deployment:');
             $this->listing($this->filesToDelete);
-        }
-
-        // back to our working file system
-        $output = $this->exec('git checkout master');
-        $this->line('$output:' . $output);
-
-        if (false === strpos($output, 'Switched to branch')) {
-            $this->error('Could not checkout previous commit state.');
-            exit;
         }
     }
 
