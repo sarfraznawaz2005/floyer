@@ -62,11 +62,11 @@ class FTP implements ConnectorInterface
             } else {
                 $this->connector->deleteDir($path);
             }
+
+            return true;
         } catch (\Exception $e) {
             return $e->getMessage();
         }
-
-        return true;
     }
 
     function deleteAt($path)
@@ -77,11 +77,11 @@ class FTP implements ConnectorInterface
             } else {
                 $this->connector->deleteDir($path);
             }
+
+            return true;
         } catch (\Exception $e) {
             return $e->getMessage();
         }
-
-        return true;
     }
 
     function write($path, $contents, $overwrite = true)
