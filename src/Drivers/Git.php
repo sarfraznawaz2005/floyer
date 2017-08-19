@@ -167,9 +167,13 @@ class Git extends Base implements DriverInterface
         // first rollback local file system back to last/remote commit id
         exec('git checkout ' . $remoteCommitId, $output);
         $this->listing($output);
+        exit;
 
         if (false === strpos($output[0], 'HEAD is now at')) {
             $this->error('Could not checkout previous commit state.');
+            exit;
+        } elseif (false === strpos($output[0], 'overwritten by checkout')) {
+            $this->warning('Stash your modifications before deploying.');
             exit;
         }
 
