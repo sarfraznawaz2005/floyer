@@ -140,7 +140,7 @@ class Git extends Base implements DriverInterface
 
             if (false === strpos($output, 'Switched to branch')) {
                 $this->error('Could not checkout previous commit state.');
-                exit;
+                //exit;
             }
 
             $response = file_get_contents($this->options['domain'] . $this->options['public_path'] . $this->extractScriptFile);
