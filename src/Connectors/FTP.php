@@ -57,7 +57,11 @@ class FTP implements ConnectorInterface
     function delete($path)
     {
         try {
-            $this->connector->delete(basename($path));
+            if (is_file($path)) {
+                $this->connector->delete(basename($path));
+            } else {
+                $this->connector->deleteDir($path);
+            }
         } catch (\Exception $e) {
             return $e->getMessage();
         }
@@ -68,7 +72,11 @@ class FTP implements ConnectorInterface
     function deleteAt($path)
     {
         try {
-            $this->connector->delete($path);
+            if (is_file($path)) {
+                $this->connector->delete($path);
+            } else {
+                $this->connector->deleteDir($path);
+            }
         } catch (\Exception $e) {
             return $e->getMessage();
         }
