@@ -130,7 +130,7 @@ class Git extends Base implements DriverInterface
      */
     function rollback()
     {
-        $this->error('rollback');
+        $files = explode("\n", $this->history());
     }
 
     /**
@@ -142,7 +142,11 @@ class Git extends Base implements DriverInterface
 
         $command = 'git diff-tree --no-commit-id --name-only -r ' . $this->lastCommitIdRemote();
 
-        $this->line($this->exec($command));
+        $files = $this->exec($command);
+
+        $this->line($files);
+
+        return $files;
     }
 
     /**
@@ -222,7 +226,7 @@ class Git extends Base implements DriverInterface
 
         foreach ($files as $file) {
 
-            if (!$file) {
+            if (!trim($file)) {
                 continue;
             }
 
