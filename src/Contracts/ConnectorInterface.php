@@ -16,11 +16,7 @@ interface ConnectorInterface
 
     function exists($path);
 
-    function existsAt($path);
-
     function delete($path);
-
-    function deleteAt($path);
 
     function write($path, $contents, $overwrite = true);
 
