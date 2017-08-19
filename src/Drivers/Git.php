@@ -280,7 +280,7 @@ class Git extends Base implements DriverInterface
             if ($deleteStatus === true) {
                 $this->success('Deleted: ' . $file);
             } else {
-                $this->error("Could not delete '$file'. Reason: " . $deleteStatus);
+                $this->error("Could not delete '$file'");
             }
         }
     }
