@@ -40,6 +40,10 @@ class Git extends Base implements DriverInterface
                 exit;
             }
 
+            // create zip
+            $this->success('Creating archive of files to upload...');
+            $this->createZipOfChangedFiles();
+
             $this->uploadDeployFiles();
 
             $response = file_get_contents($this->options['domain'] . $this->options['public_path'] . $this->extractScriptFile);
@@ -120,28 +124,11 @@ class Git extends Base implements DriverInterface
                 exit;
             }
 
-            // first rollback local file system back to last/remote commit id
-            $output = $this->exec('git checkout ' . $this->lastCommitIdRemote());
-            $this->line('$output:' . $output);
-
-            if (false === strpos($output, 'HEAD is now at')) {
-                $this->error('Could not checkout previous commit state.');
-                exit;
-            } elseif (false === strpos($output, 'overwritten by checkout')) {
-                $this->warning('Stash your modifications before deploying.');
-                exit;
-            }
+            // create zip
+            $this->success('Creating archive of files to upload...');
+            $this->createZipOfChangedFiles($this->lastCommitIdRemote);
 
             $this->uploadDeployFiles();
-
-            // back to our working file system
-            $output = $this->exec('git checkout master');
-            $this->line('$output:' . $output);
-
-            if (false === strpos($output, 'Switched to branch')) {
-                $this->error('Could not checkout previous commit state.');
-                //exit;
-            }
 
             $response = file_get_contents($this->options['domain'] . $this->options['public_path'] . $this->extractScriptFile);
 
@@ -178,7 +165,7 @@ class Git extends Base implements DriverInterface
     {
         $this->title('Getting list of changed files in previous deployment:');
 
-        $remoteCommitId = $this->lastCommitIdRemote();
+        $this->lastCommitIdRemote = $remoteCommitId = $this->lastCommitIdRemote();
 
         if (!trim($remoteCommitId)) {
             $this->error('No remote commit id found.');
@@ -336,12 +323,17 @@ class Git extends Base implements DriverInterface
 
     /**
      * Creates zip file of files to upload.
+     * @param string $commitId
      */
-    function createZipOfChangedFiles()
+    function createZipOfChangedFiles($commitId = '')
     {
         $zipName = $this->zipFile;
 
-        $command = "git archive --output=$zipName HEAD " . implode(' ', $this->filesChanged);
+        if (!$commitId) {
+            $command = "git archive --output=$zipName HEAD " . implode(' ', $this->filesChanged);
+        } else {
+            $command = "git archive --output=$zipName $commitId";
+        }
 
         exec($command);
     }
@@ -374,10 +366,6 @@ class Git extends Base implements DriverInterface
      */
     protected function uploadDeployFiles()
     {
-        // create zip
-        $this->success('Creating archive of files to upload...');
-        $this->createZipOfChangedFiles();
-
         // check if zip exists locally
         if (!file_exists($this->zipFile)) {
             $this->error('Could not create archive file.');
