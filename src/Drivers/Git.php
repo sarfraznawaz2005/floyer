@@ -40,35 +40,7 @@ class Git extends Base implements DriverInterface
                 exit;
             }
 
-            // create zip
-            $this->success('Creating archive of files to upload...');
-            $this->createZipOfChangedFiles();
-
-            // check if zip exists locally
-            if (!file_exists($this->zipFile)) {
-                $this->error('Could not create archive file.');
-                exit;
-            }
-
-            $this->success('Uploading extract files script...');
-
-            // upload extract zip script on server
-            file_put_contents($this->extractScriptFile, $this->extractScript());
-            $uploadStatus = $this->connector->upload($this->extractScriptFile, $this->options['public_path']);
-
-            if (!$uploadStatus) {
-                $this->error('Could not upload script file.');
-                exit;
-            }
-
-            $this->success('Uploading zip archive of files changed...');
-
-            $uploadStatus = $this->connector->upload($this->zipFile, $this->options['root']);
-
-            if (!$uploadStatus) {
-                $this->error('Could not upload archive file.');
-                exit;
-            }
+            $this->uploadDeployFiles();
 
             $response = file_get_contents($this->options['domain'] . $this->options['public_path'] . $this->extractScriptFile);
 
@@ -140,13 +112,51 @@ class Git extends Base implements DriverInterface
     {
         $this->title('Getting list of changed files in previous deployment:');
 
-        $command = 'git diff-tree --no-commit-id --name-only -r ' . $this->lastCommitIdRemote();
+        $remoteCommitId = 'cd994df2e0a7ff5b7c691000210a8c7ed42f57ce';
 
-        $files = $this->exec($command);
+        if (!trim($remoteCommitId)) {
+            $this->error('No remote commit id found.');
+            exit;
+        }
 
-        $this->line($files);
+        $command = 'git diff --name-status ' . $remoteCommitId;
 
-        return $files;
+        $output = $this->exec($command);
+
+        $files = explode("\n", $output);
+
+        foreach ($files as $file) {
+
+            if (!trim($file)) {
+                continue;
+            }
+
+            if (strpos($file, 'warning: CRLF will be replaced by LF in') !== false) {
+                continue;
+            } elseif (strpos($file, 'original line endings in your working directory.') !== false) {
+                continue;
+            }
+
+            $array = explode("\t", $file);
+            $type = $array[0];
+            $path = $array[1];
+
+            if ($type === 'A' || $type === 'C' || $type === 'M' || $type === 'T') {
+                $this->filesChanged[] = $path;
+            } elseif ($type === 'D') {
+                $this->filesToDelete[] = $path;
+            }
+        }
+
+        if ($this->filesChanged) {
+            $this->success('Following files were uploaded in previous deployment:');
+            $this->listing($this->filesChanged);
+        }
+
+        if ($this->filesToDelete) {
+            $this->error('Following files were deleted in previous deployment:');
+            $this->listing($this->filesToDelete);
+        }
     }
 
     /**
@@ -290,6 +300,42 @@ class Git extends Base implements DriverInterface
             } else {
                 $this->error("Could not delete '$file'");
             }
+        }
+    }
+
+    /**
+     * @return mixed
+     */
+    protected function uploadDeployFiles()
+    {
+        // create zip
+        $this->success('Creating archive of files to upload...');
+        $this->createZipOfChangedFiles();
+
+        // check if zip exists locally
+        if (!file_exists($this->zipFile)) {
+            $this->error('Could not create archive file.');
+            exit;
+        }
+
+        $this->success('Uploading extract files script...');
+
+        // upload extract zip script on server
+        file_put_contents($this->extractScriptFile, $this->extractScript());
+        $uploadStatus = $this->connector->upload($this->extractScriptFile, $this->options['public_path']);
+
+        if (!$uploadStatus) {
+            $this->error('Could not upload script file.');
+            exit;
+        }
+
+        $this->success('Uploading zip archive of files changed...');
+
+        $uploadStatus = $this->connector->upload($this->zipFile, $this->options['root']);
+
+        if (!$uploadStatus) {
+            $this->error('Could not upload archive file.');
+            exit;
         }
     }
 }
