@@ -138,7 +138,11 @@ class Git extends Base implements DriverInterface
      */
     function history()
     {
-        $this->text('history');
+        $this->title('Following files were deployed in previous deployment:');
+
+        $command = 'git diff-tree --no-commit-id --name-only -r ' . $this->lastCommitIdRemote();
+
+        $this->line($this->exec($command));
     }
 
     /**
