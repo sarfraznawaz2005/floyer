@@ -216,6 +216,7 @@ class Git extends Base implements DriverInterface
 
         // back to our working file system
         $output = $this->exec('git checkout master');
+        $this->line('$output:' . $output);
 
         if (false === strpos($output, 'Switched to branch')) {
             $this->error('Could not checkout previous commit state.');
