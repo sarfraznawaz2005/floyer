@@ -90,13 +90,13 @@ class Deploy extends Command
             exit;
         }
 
-        $class = 'Sarfraznawaz2005\Floyer\Drivers\\' . $options['driver'];
-        $driver = new $class;
+        $driver = 'Sarfraznawaz2005\Floyer\Drivers\\' . $options['driver'];
+        $connector = 'Sarfraznawaz2005\Floyer\Connectors\\' . $options['connector'];
 
-        $class = 'Sarfraznawaz2005\Floyer\Connectors\\' . $options['connector'];
-        $connector = new $class;
+        $driver = new $driver;
+        $connector = new $connector;
+
         $connector->connect();
-
         $driver->setIO($io);
         $driver->init($connector);
 

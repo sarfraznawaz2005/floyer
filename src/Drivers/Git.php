@@ -70,7 +70,6 @@ class Git extends Base implements DriverInterface
                 exit;
             }
 
-
             $response = file_get_contents($this->options['domain'] . $this->options['public_path'] . $this->extractScriptFile);
 
             if ($response === 'ok') {
@@ -247,10 +246,13 @@ class Git extends Base implements DriverInterface
 
         if ($this->filesToDelete) {
             $this->error('Following files will be deleted:');
+            $this->listing($this->filesToDelete);
 
+            /*
             foreach ($this->filesToDelete as $file) {
                 $this->error('* ' . $file);
             }
+            */
         }
     }
 
