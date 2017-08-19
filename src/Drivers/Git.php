@@ -27,7 +27,7 @@ class Git extends Base implements DriverInterface
 
         $this->line($this->filesToUpload());
 
-        if ($this->confirm('Above files will be uploaded, do you wish to continue?')) {
+        if ($this->confirm('Above files will be uploaded/deleted, do you wish to continue?')) {
             $this->successBG('Deployment Started');
 
             if (!$this->filesChanged) {
@@ -247,12 +247,6 @@ class Git extends Base implements DriverInterface
         if ($this->filesToDelete) {
             $this->error('Following files will be deleted:');
             $this->listing($this->filesToDelete);
-
-            /*
-            foreach ($this->filesToDelete as $file) {
-                $this->error('* ' . $file);
-            }
-            */
         }
     }
 
@@ -282,6 +276,7 @@ class Git extends Base implements DriverInterface
     {
         foreach ($this->filesToDelete as $file) {
             $deleteStatus = $this->connector->deleteAt($file);
+            $this->line(is_dir($file));
 
             if ($deleteStatus === true) {
                 $this->success('Deleted: ' . $file);
