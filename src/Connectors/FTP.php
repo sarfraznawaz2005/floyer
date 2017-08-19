@@ -58,12 +58,10 @@ class FTP implements ConnectorInterface
     {
         try {
             if (!is_dir($path)) {
-                $this->connector->delete(basename($path));
+                return $this->connector->delete(basename($path));
             } else {
-                $this->connector->deleteDir($path);
+                return $this->connector->deleteDir($path);
             }
-
-            return true;
         } catch (\Exception $e) {
             return $e->getMessage();
         }
@@ -73,12 +71,10 @@ class FTP implements ConnectorInterface
     {
         try {
             if (!is_dir($path)) {
-                $this->connector->delete($path);
+                return $this->connector->delete($path);
             } else {
-                $this->connector->deleteDir($path);
+                return $this->connector->deleteDir($path);
             }
-
-            return true;
         } catch (\Exception $e) {
             return $e->getMessage();
         }
