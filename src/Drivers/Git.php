@@ -121,7 +121,7 @@ class Git extends Base implements DriverInterface
             }
 
             // first rollback local file system back to last/remote commit id
-            $output = $this->exec('git checkout ' . $this->lastCommitIdRemote());
+            $output = $this->exec('git checkout ' . $this->lastCommitIdRemote);
 
             if (false === strpos($output, 'HEAD is now at')) {
                 $this->error('Could not checkout previous commit state.');
