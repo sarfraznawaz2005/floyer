@@ -208,7 +208,8 @@ class Git extends Base implements DriverInterface
             $this->listing($this->filesToDelete);
         }
 
-        $output = $this->exec('git master ' . $remoteCommitId);
+        // back to our working file system
+        $output = $this->exec('git checkout master');
         $this->line($output);
     }
 
