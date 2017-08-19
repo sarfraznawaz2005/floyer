@@ -276,7 +276,6 @@ class Git extends Base implements DriverInterface
     {
         foreach ($this->filesToDelete as $file) {
             $deleteStatus = $this->connector->deleteAt($file);
-            $this->line(is_dir($file));
 
             if ($deleteStatus === true) {
                 $this->success('Deleted: ' . $file);
