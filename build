@@ -32,6 +32,7 @@ $phar->buildFromDirectory(
 
 // Adding main file
 $phar->addFile('floyer.php');
+$phar->addFile('config/floyer-sample.ini');
 $phar->addFile('src/Commands/Deploy.php');
 $phar->addFile('src/Connectors/FTP.php');
 $phar->addFile('src/Contracts/ConnectorInterface.php');
