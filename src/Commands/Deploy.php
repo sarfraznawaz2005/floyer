@@ -156,7 +156,7 @@ class Deploy extends Command
             exit;
         }
 
-        copy($currentDir . '/config/floyer-sample.ini', $currentDir . '/floyer.ini');
+        file_put_contents($currentDir . '/floyer.ini', file_get_contents('floyer-sample.ini'));
 
         if (file_exists($configFile)) {
             $io->writeln("<fg=green>'floyer.ini' created successfully.</>");
