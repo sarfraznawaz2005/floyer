@@ -74,19 +74,40 @@ class Deploy extends Command
         $currentDirectory = getcwd();
 
         if (!file_exists("$currentDirectory/.git")) {
-            $this->io->writeln("<fg=red>'{$currentDirectory}' is not a Git repository.</>");
+            $io->writeln("<fg=red>'{$currentDirectory}' is not a Git repository.</>");
             exit;
         }
 
-        $options = $this->getOptions();
+        try {
+            $options = $this->getOptions();
+        } catch (\Exception $e) {
+            $message = $e->getMessage();
+
+            if (false !== strpos($message, 'does not exist')) {
+                if ($io->confirm("<fg=yellow>Floyer config file does not exist. Would you like to create it now ?</>")) {
+                    $this->createConfigFile($io);
+
+                    // re-read options
+                    $options = $this->getOptions();
+                }
+            }
+
+            $currentDir = getcwd();
+            $configFile = $currentDir . '/floyer.ini';
+
+            if (!file_exists($configFile)) {
+                $io->writeln("<fg=red>'floyer.ini' does not exists!</>");
+                exit;
+            }
+        }
 
         if (!isset($options['driver'])) {
-            $this->io->writeln("<fg=red>Driver is not specified in config file!</>");
+            $io->writeln("<fg=red>Driver is not specified in config file!</>");
             exit;
         }
 
         if (!isset($options['connector'])) {
-            $this->io->writeln("<fg=red>Connector is not specified in config file!</>");
+            $io->writeln("<fg=red>Connector is not specified in config file!</>");
             exit;
         }
 
@@ -123,5 +144,22 @@ class Deploy extends Command
         $output->writeln('<fg=black;bg=green>-------------------------------------------------</>');
         $output->writeln('<fg=black;bg=green>|                     Floyer                    |</>');
         $output->writeln('<fg=black;bg=green>-------------------------------------------------</>');
+    }
+
+    protected function createConfigFile(SymfonyStyle $io)
+    {
+        $currentDir = getcwd();
+        $configFile = $currentDir . '/floyer.ini';
+
+        if (file_exists($configFile)) {
+            $io->writeln("<fg=green>'floyer.ini' already exists!</>");
+            exit;
+        }
+
+        copy($currentDir . '/config/floyer-sample.ini', $currentDir . '/floyer.ini');
+
+        if (file_exists($configFile)) {
+            $io->writeln("<fg=green>'floyer.ini' created successfully.</>");
+        }
     }
 }
