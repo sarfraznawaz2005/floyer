@@ -316,12 +316,18 @@ class Git extends Base implements DriverInterface
 
     /**
      * Creates zip file of files to upload.
+     * @param bool $isRollback
      */
-    function createZipOfChangedFiles()
+    function createZipOfChangedFiles($isRollback = false)
     {
+        $target = 'HEAD';
         $zipName = $this->zipFile;
 
-        $command = "git archive --output=$zipName HEAD " . implode(' ', $this->filesChanged);
+        if ($isRollback) {
+            $target = $this->lastCommitIdRemote;
+        }
+
+        $command = "git archive --output=$zipName $target " . implode(' ', $this->filesChanged);
 
         exec($command);
     }
@@ -350,13 +356,14 @@ class Git extends Base implements DriverInterface
     }
 
     /**
+     * @param bool $isRollback
      * @return mixed
      */
-    protected function uploadDeployFiles()
+    protected function uploadDeployFiles($isRollback = false)
     {
         // create zip
         $this->success('Creating archive of files to upload...');
-        $this->createZipOfChangedFiles();
+        $this->createZipOfChangedFiles($isRollback);
 
         // check if zip exists locally
         if (!file_exists($this->zipFile)) {
