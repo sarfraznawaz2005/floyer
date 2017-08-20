@@ -324,7 +324,16 @@ class Git extends Base implements DriverInterface
         $zipName = $this->zipFile;
 
         if ($isRollback) {
-            $target = $this->lastCommitIdRemote;
+            $remoteCommitId = $this->lastCommitIdRemote;
+            $command = "git log --format=%H -n2 $remoteCommitId";
+            $output = explode("\n", $this->exec($command));
+
+            if (isset($output[1])) {
+                $target = $output[1];
+            } else {
+                $this->error('Could not find commit hash to rollback');
+                exit;
+            }
         }
 
         $command = "git archive --output=$zipName $target " . implode(' ', $this->filesChanged);
