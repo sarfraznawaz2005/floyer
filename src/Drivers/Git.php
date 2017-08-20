@@ -194,19 +194,17 @@ class Git extends Base implements DriverInterface
             }
         }
 
+        $this->filesChanged = $this->filterIgnoredFiles($this->filesChanged);
+
         if ($this->filesChanged) {
             $this->success('Following files were uploaded in previous deployment:');
-
-            $this->filesChanged = $this->filterIgnoredFiles($this->filesChanged);
-
             $this->listing($this->filesChanged);
         }
 
+        $this->filesToDelete = $this->filterIgnoredFiles($this->filesToDelete);
+
         if ($this->filesToDelete) {
             $this->error('Following files were deleted in previous deployment:');
-
-            $this->filesToDelete = $this->filterIgnoredFiles($this->filesToDelete);
-
             $this->listing($this->filesToDelete);
         }
     }
@@ -309,19 +307,17 @@ class Git extends Base implements DriverInterface
             }
         }
 
+        $this->filesChanged = $this->filterIgnoredFiles($this->filesChanged);
+
         if ($this->filesChanged) {
             $this->success('Following files will be uploaded:');
-
-            $this->filesChanged = $this->filterIgnoredFiles($this->filesChanged);
-
             $this->listing($this->filesChanged);
         }
 
+        $this->filesToDelete = $this->filterIgnoredFiles($this->filesToDelete);
+
         if ($this->filesToDelete) {
             $this->error('Following files will be deleted:');
-
-            $this->filesToDelete = $this->filterIgnoredFiles($this->filesToDelete);
-
             $this->listing($this->filesToDelete);
         }
     }
