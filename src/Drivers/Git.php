@@ -413,6 +413,7 @@ class Git extends Base implements DriverInterface
 
         // upload extract zip script on server
         file_put_contents($this->extractScriptFile, $this->extractScript());
+
         $uploadStatus = $this->connector->upload($this->extractScriptFile, $this->options['public_path']);
 
         if (!$uploadStatus) {
