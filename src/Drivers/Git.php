@@ -109,6 +109,7 @@ class Git extends Base implements DriverInterface
 
         if ($this->confirm('Do you want to proceed with rollback?')) {
             $this->successBG('Rollback Started');
+            $this->successBG('Current Remote Revision: ' . $this->lastCommitIdRemote);
 
             if (!$this->filesChanged) {
                 if ($this->filesToDelete) {
