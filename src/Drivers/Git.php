@@ -183,13 +183,16 @@ class Git extends Base implements DriverInterface
             }
 
             $array = explode("\t", $file);
-            $type = $array[0];
-            $path = $array[1];
 
-            if ($type === 'A' || $type === 'C' || $type === 'M' || $type === 'T') {
-                $this->filesChanged[] = $path;
-            } elseif ($type === 'D') {
-                $this->filesToDelete[] = $path;
+            if (isset($array[0]) && isset($array[1])) {
+                $type = $array[0];
+                $path = $array[1];
+
+                if ($type === 'A' || $type === 'C' || $type === 'M' || $type === 'T') {
+                    $this->filesChanged[] = $path;
+                } elseif ($type === 'D') {
+                    $this->filesToDelete[] = $path;
+                }
             }
         }
 
@@ -301,13 +304,16 @@ class Git extends Base implements DriverInterface
             }
 
             $array = explode("\t", $file);
-            $type = $array[0];
-            $path = $array[1];
 
-            if ($type === 'A' || $type === 'C' || $type === 'M' || $type === 'T') {
-                $this->filesChanged[] = $path;
-            } elseif ($type === 'D') {
-                $this->filesToDelete[] = $path;
+            if (isset($array[0]) && isset($array[1])) {
+                $type = $array[0];
+                $path = $array[1];
+
+                if ($type === 'A' || $type === 'C' || $type === 'M' || $type === 'T') {
+                    $this->filesChanged[] = $path;
+                } elseif ($type === 'D') {
+                    $this->filesToDelete[] = $path;
+                }
             }
         }
 
