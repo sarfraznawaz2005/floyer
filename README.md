@@ -43,6 +43,14 @@ To run deployment, just type this on terminal: `php floyer deploy`. See below fo
 - Currenly only supports `git` driver
 - Not fully tested especially `rollback` feature
 
+## Download ##
+
+The phar version is present at `dist/floyer.phar`. Once you download it, copy it to your project and issue this command at terminal:
+
+`php floyer.phar deploy` or if you rename `floyer.phar` to `floyer`:
+
+`php floyer deploy`
+
 ## Extending ##
 
 - You can extend it by adding more connectors like `SFTP`, etc. Checkout existing connector in `src/Connectors/FTP.php`
