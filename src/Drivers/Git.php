@@ -83,7 +83,6 @@ class Git extends Base implements DriverInterface
      */
     function sync()
     {
-        $this->warning('sync');
         $this->success('Sync commit ID started...');
 
         // update .rev file with new commit id
