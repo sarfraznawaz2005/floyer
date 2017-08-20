@@ -327,7 +327,7 @@ class Git extends Base implements DriverInterface
         }
 
         $command = "git archive --output=$zipName $target " . implode(' ', $this->filesChanged);
-        $this->line($command);
+        $command = str_replace("\n", "", $command);
 
         exec($command);
     }
