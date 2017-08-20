@@ -23,7 +23,7 @@ class Git extends Base implements DriverInterface
         @unlink($this->zipFile);
         @unlink($this->extractScriptFile);
 
-        $this->checkDirty();
+        //$this->checkDirty();
 
         $this->line($this->filesToUpload());
 
@@ -404,7 +404,7 @@ class Git extends Base implements DriverInterface
         $this->createZipOfChangedFiles($isRollback);
 
         // check if zip exists locally
-        if (!file_exists($this->zipFile)) {
+        if (!file_exists($this->dir . $this->zipFile)) {
             $this->error('Could not create archive file.');
             exit;
         }

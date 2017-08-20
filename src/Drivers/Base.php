@@ -22,6 +22,7 @@ Abstract class Base
     protected $revFile = '.rev_floyer';
     protected $zipFile = 'deployment_floyer.zip';
     protected $extractScriptFile = 'extract_floyer.php';
+    protected $dir = '';
 
     // console-related
     public $io = null;
@@ -35,6 +36,8 @@ Abstract class Base
 
     public function init(ConnectorInterface $connector)
     {
+        $this->dir = getcwd() . DIRECTORY_SEPARATOR;
+
         $this->connector = $connector;
 
         $this->lastCommitId = $this->lastCommitIdLocal();
