@@ -37,10 +37,10 @@ To run deployment, just type this on terminal: `php floyer deploy`. See below fo
 
 ## Current Limitations ##
 
-- Does not have multiple server suppport eg staging and production
+- Does not have multiple server support eg staging and production
 - Works with current main git branch only
-- Currenly only supports `FTP` connector
-- Currenly only supports `git` driver
+- Currently only supports `FTP` connector
+- Currently only supports `git` driver
 - Not fully tested especially `rollback` feature
 
 ## Download ##
