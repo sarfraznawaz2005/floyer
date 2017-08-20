@@ -43,6 +43,8 @@ Abstract class Base
 
     public function exec($command)
     {
+        $command = str_replace("\n", "", $command);
+
         return shell_exec(escapeshellcmd($command) . ' 2>&1');
     }
 
