@@ -27,7 +27,7 @@ class Git extends Base implements DriverInterface
 
         $this->line($this->filesToUpload());
 
-        if ($this->confirm('Above files will be uploaded/deleted, do you wish to continue?')) {
+        if ($this->confirm('Do you want to proceed with deployment?')) {
             $this->successBG('Deployment Started');
 
             if (!$this->filesChanged) {
