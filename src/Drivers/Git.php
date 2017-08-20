@@ -120,7 +120,7 @@ class Git extends Base implements DriverInterface
                 exit;
             }
 
-            $this->uploadDeployFiles();
+            $this->uploadDeployFiles(true);
 
             $response = file_get_contents($this->options['domain'] . $this->options['public_path'] . $this->extractScriptFile);
 
