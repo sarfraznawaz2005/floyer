@@ -316,6 +316,11 @@ class Git extends Base implements DriverInterface
             $this->error('Following files will be deleted:');
             $this->listing($this->filesToDelete);
         }
+
+        if (!$this->filesChanged && !$this->filesToDelete) {
+            $this->warning('No files to deploy!');
+            exit;
+        }
     }
 
     /**
