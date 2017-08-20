@@ -73,6 +73,7 @@ Abstract class Base
         }
 
         $files = array_values($files);
+        return $files;
 
         return [
             'files' => $files,
