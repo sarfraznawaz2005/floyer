@@ -196,11 +196,17 @@ class Git extends Base implements DriverInterface
 
         if ($this->filesChanged) {
             $this->success('Following files were uploaded in previous deployment:');
+
+            $this->filesChanged = $this->filterIgnoredFiles($this->filesChanged);
+
             $this->listing($this->filesChanged);
         }
 
         if ($this->filesToDelete) {
             $this->error('Following files were deleted in previous deployment:');
+
+            $this->filesToDelete = $this->filterIgnoredFiles($this->filesToDelete);
+
             $this->listing($this->filesToDelete);
         }
     }
