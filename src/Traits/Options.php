@@ -46,6 +46,8 @@ trait Options
         $options['domain'] = $this->addSlashIfMissing($options['domain']);
         $options['public_path'] = $this->addSlashIfMissing($options['public_path']);
 
+        $options['exclude'][] = basename($iniFile);
+
         return $options;
     }
 

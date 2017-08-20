@@ -31,6 +31,7 @@ Abstract class Base
 
     protected $filesToDelete = [];
     protected $filesChanged = [];
+    protected $filesToExclude = [];
 
     public function init(ConnectorInterface $connector)
     {
@@ -39,6 +40,8 @@ Abstract class Base
         $this->lastCommitId = $this->lastCommitIdLocal();
 
         $this->options = $this->getOptions();
+
+        $this->filesToExclude = array_merge($this->filesToExclude, $this->options['exclude']);
     }
 
     public function exec($command)
@@ -46,6 +49,48 @@ Abstract class Base
         $command = str_replace("\n", "", $command);
 
         return shell_exec(escapeshellcmd($command) . ' 2>&1');
+    }
+
+    /**
+     * Filter ignore files.
+     *
+     * @param array $files Array of files which needed to be filtered
+     *
+     * @return array with `files` (filtered) and `filesToSkip`
+     */
+    public function filterIgnoredFiles($files)
+    {
+        $filesToSkip = [];
+
+        foreach ($files as $i => $file) {
+            foreach ($this->filesToExclude as $pattern) {
+                if ($this->patternMatch($pattern, $file)) {
+                    unset($files[$i]);
+                    $filesToSkip[] = $file;
+                    break;
+                }
+            }
+        }
+
+        $files = array_values($files);
+
+        return [
+            'files' => $files,
+            'filesToSkip' => $filesToSkip,
+        ];
+    }
+
+    /**
+     * Glob the file path.
+     *
+     * @param string $pattern
+     * @param string $string
+     *
+     * @return string
+     */
+    protected function patternMatch($pattern, $string)
+    {
+        return preg_match('#^' . strtr(preg_quote($pattern, '#'), ['\*' => '.*', '\?' => '.']) . '$#i', $string);
     }
 
     protected function extractScript()
