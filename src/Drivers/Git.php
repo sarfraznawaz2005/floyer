@@ -405,6 +405,21 @@ class Git extends Base implements DriverInterface
 
         // check if zip exists locally
         if (!file_exists($this->dir . $this->zipFile)) {
+
+            // most likely there were too many files so command became too long
+            // and archive file could not be created. Here we use alternative method
+            // using sh.exe.
+            // Ref: https://stackoverflow.com/questions/24456200/git-archive-the-input-line-is-too-long-error-in-batch-file
+
+            $lastCommitId = $this->lastCommitId;
+            $lastCommitIdRemote = $this->lastCommitIdRemote;
+            $zipFile = $this->zipFile;
+
+            $command = "sh -c 'git archive -o $zipFile HEAD $(git diff --name-only $lastCommitIdRemote $lastCommitId)'";
+            $this->exec($command);
+        }
+
+        if (!file_exists($this->dir . $this->zipFile)) {
             $this->error('Could not create archive file.');
             exit;
         }
