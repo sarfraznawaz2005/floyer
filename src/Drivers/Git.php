@@ -157,7 +157,8 @@ class Git extends Base implements DriverInterface
     {
         $this->title('Getting list of changed files in previous deployment:');
 
-        $remoteCommitId = $this->lastCommitIdRemote();
+        //$remoteCommitId = $this->lastCommitIdRemote();
+        $remoteCommitId = 'cd994df2e0a7ff5b7c691000210a8c7ed42f57ce';
 
         if (!trim($remoteCommitId)) {
             $this->error('No remote commit id found.');
