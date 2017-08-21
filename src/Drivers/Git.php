@@ -219,8 +219,6 @@ class Git extends Base implements DriverInterface
      */
     protected function gatherFiles($files, $isRollback)
     {
-        $type = $isRollback ? 'Rollback' : 'Deployment';
-
         if (!is_array($files)) {
             $this->warning('No files for to process!');
             exit;
