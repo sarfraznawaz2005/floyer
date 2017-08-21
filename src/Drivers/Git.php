@@ -222,7 +222,7 @@ class Git extends Base implements DriverInterface
         $type = $isRollback ? 'Rollback' : 'Deployment';
 
         if (!is_array($files)) {
-            $this->warning("No files for $type!");
+            $this->warning("No files for " . $type);
             exit;
         }
 
@@ -294,7 +294,7 @@ class Git extends Base implements DriverInterface
         }
 
         if (!$this->filesChanged && !$this->filesToDelete) {
-            $this->warning("No files for $type!");
+            $this->warning("No files for " . $type);
             exit;
         }
     }
@@ -312,7 +312,7 @@ class Git extends Base implements DriverInterface
                 $this->deleteFiles();
                 $this->successBG("$type Finished");
             } else {
-                $this->warning("No files for $type!");
+                $this->warning("No files for " . $type);
             }
             exit;
         }
@@ -372,11 +372,11 @@ class Git extends Base implements DriverInterface
             // delete script file
             $this->connector->deleteAt($this->options['public_path'] . $this->extractScriptFile);
 
-            $this->success('Finishing, please wait...');
-
             if ($this->filesToDelete) {
                 $this->deleteFiles();
             }
+
+            $this->success('Finishing, please wait...');
 
             // delete deployment file
             $this->connector->delete($this->zipFile);
