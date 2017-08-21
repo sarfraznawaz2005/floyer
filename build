@@ -39,6 +39,7 @@ $phar->addFile('src/Contracts/ConnectorInterface.php');
 $phar->addFile('src/Contracts/DriverInterface.php');
 $phar->addFile('src/Drivers/Base.php');
 $phar->addFile('src/Drivers/Git.php');
+$phar->addFile('src/Drivers/Svn.php');
 $phar->addFile('src/Traits/IO.php');
 $phar->addFile('src/Traits/Options.php');
 $phar->addFile('vendor/autoload.php');

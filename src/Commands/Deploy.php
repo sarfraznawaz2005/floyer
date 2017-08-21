@@ -29,7 +29,7 @@ class Deploy extends Command
 
     // our options
     protected $options = [
-        self::SYNC => 'Synchronize last local commit id with remote revision file.',
+        self::SYNC => 'Synchronize last local revision id with remote revision file.',
         self::ROLLBACK => 'Rollback previous deployment.',
         self::HISTORY => 'List files deployed in previous deployment.',
     ];
