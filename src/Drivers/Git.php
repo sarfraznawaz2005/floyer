@@ -23,59 +23,17 @@ class Git extends Base implements DriverInterface
         @unlink($this->zipFile);
         @unlink($this->extractScriptFile);
 
-        //$this->checkDirty();
+        $this->checkDirty();
 
         $this->line($this->filesToUpload());
 
         if ($this->confirm('Do you want to proceed with deployment?')) {
             $this->successBG('Deployment Started');
 
-            if (!$this->filesChanged) {
-                if ($this->filesToDelete) {
-                    $this->deleteFiles();
-                    $this->successBG('Deployment Finished');
-                } else {
-                    $this->warning('No files to deploy!');
-                }
-                exit;
-            }
-
             $this->uploadDeployFiles();
-
-            $response = file_get_contents($this->options['domain'] . $this->options['public_path'] . $this->extractScriptFile);
-
-            if ($response === 'ok') {
-                // delete script file
-                $this->connector->deleteAt($this->options['public_path'] . $this->extractScriptFile);
-
-                $this->success('Deploying changed files...');
-
-                if ($this->filesToDelete) {
-                    $this->deleteFiles();
-                }
-
-                // delete deployment file
-                $this->connector->delete($this->zipFile);
-
-                // update .rev file with new commit id
-                $uploadStatus = $this->connector->write($this->revFile, $this->lastCommitId);
-
-                if (!$uploadStatus) {
-                    $this->error('Could not update revision file.');
-                    exit;
-                }
-
-                $this->successBG('Deployment Finished');
-            } else {
-                $this->error('Unknown Error!');
-            }
-
         } else {
             $this->warning('Deployment Skipped!');
         }
-
-        @unlink($this->zipFile);
-        @unlink($this->extractScriptFile);
     }
 
     /**
@@ -83,7 +41,7 @@ class Git extends Base implements DriverInterface
      */
     function sync()
     {
-        $this->success('Sync commit ID started...');
+        $this->success('Sync revision ID started...');
 
         // update .rev file with new commit id
         $uploadStatus = $this->connector->write($this->revFile, $this->lastCommitId);
@@ -93,7 +51,7 @@ class Git extends Base implements DriverInterface
             exit;
         }
 
-        $this->success('Sync commit ID completed!');
+        $this->success('Sync revision ID completed!');
     }
 
     /**
@@ -110,44 +68,10 @@ class Git extends Base implements DriverInterface
             $this->successBG('Rollback Started');
             $this->success('Current Remote Revision: ' . $this->lastCommitIdRemote);
 
-            if (!$this->filesChanged) {
-                if ($this->filesToDelete) {
-                    $this->deleteFiles();
-                    $this->successBG('Rollback Finished');
-                } else {
-                    $this->warning('No files to rollback!');
-                }
-                exit;
-            }
-
             $this->uploadDeployFiles(true);
-
-            $response = file_get_contents($this->options['domain'] . $this->options['public_path'] . $this->extractScriptFile);
-
-            if ($response === 'ok') {
-                // delete script file
-                $this->connector->deleteAt($this->options['public_path'] . $this->extractScriptFile);
-
-                $this->success('Deploying changed files...');
-
-                if ($this->filesToDelete) {
-                    $this->deleteFiles();
-                }
-
-                // delete deployment file
-                $this->connector->delete($this->zipFile);
-
-                $this->successBG('Rollback Finished');
-            } else {
-                $this->error('Unknown Error!');
-            }
-
         } else {
             $this->warning('Rollback Skipped!');
         }
-
-        @unlink($this->zipFile);
-        @unlink($this->extractScriptFile);
     }
 
     /**
@@ -170,53 +94,7 @@ class Git extends Base implements DriverInterface
 
         $files = explode("\n", $output);
 
-        foreach ($files as $file) {
-
-            if (!trim($file)) {
-                continue;
-            }
-
-            if (strpos($file, 'warning: CRLF will be replaced by LF in') !== false) {
-                continue;
-            } elseif (strpos($file, 'original line endings in your working directory.') !== false) {
-                continue;
-            } elseif (strpos($file, 'fatal') !== false || strpos($file, 'error') !== false) {
-                $this->error($file);
-                exit;
-            }
-
-            $array = explode("\t", $file);
-
-            if (isset($array[0]) && isset($array[1])) {
-                $type = $array[0];
-                $path = $array[1];
-
-                if ($type === 'A' || $type === 'C' || $type === 'M' || $type === 'T') {
-                    $this->filesChanged[] = $path;
-                } elseif ($type === 'D') {
-                    $this->filesToDelete[] = $path;
-                }
-            }
-        }
-
-        $this->filesChanged = $this->filterIgnoredFiles($this->filesChanged);
-
-        if ($this->filesChanged) {
-            $this->success('Following files were uploaded in previous deployment:');
-            $this->listing($this->filesChanged);
-        }
-
-        $this->filesToDelete = $this->filterIgnoredFiles($this->filesToDelete);
-
-        if ($this->filesToDelete) {
-            $this->error('Following files were deleted in previous deployment:');
-            $this->listing($this->filesToDelete);
-        }
-
-        if (!$this->filesChanged && !$this->filesToDelete) {
-            $this->warning('No files were deployed!');
-            exit;
-        }
+        $this->gatherFiles($files, true);
     }
 
     /**
@@ -275,72 +153,13 @@ class Git extends Base implements DriverInterface
             exit;
         }
 
-        /*
-         * Git Status Codes
-         *
-         * A: addition of a file
-         * C: copy of a file into a new one
-         * D: deletion of a file
-         * M: modification of the contents or mode of a file
-         * R: renaming of a file
-         * T: change in the type of the file
-         * U: file is unmerged (you must complete the merge before it can be committed)
-         * X: "unknown" change type (most probably a bug, please report it)
-         */
-
         $command = 'git diff --name-status ' . $remoteCommitId . ' ' . $localCommitId;
 
         $output = $this->exec($command);
 
         $files = explode("\n", $output);
 
-        foreach ($files as $file) {
-
-            if (!trim($file)) {
-                continue;
-            }
-
-            if (strpos($file, 'warning: CRLF will be replaced by LF in') !== false) {
-                continue;
-            } elseif (strpos($file, 'original line endings in your working directory.') !== false) {
-                continue;
-            } elseif (strpos($file, 'fatal') !== false || strpos($file, 'error') !== false) {
-                $this->error($file);
-                exit;
-            }
-
-            $array = explode("\t", $file);
-
-            if (isset($array[0]) && isset($array[1])) {
-                $type = $array[0];
-                $path = $array[1];
-
-                if ($type === 'A' || $type === 'C' || $type === 'M' || $type === 'T') {
-                    $this->filesChanged[] = $path;
-                } elseif ($type === 'D') {
-                    $this->filesToDelete[] = $path;
-                }
-            }
-        }
-
-        $this->filesChanged = $this->filterIgnoredFiles($this->filesChanged);
-
-        if ($this->filesChanged) {
-            $this->success('Following files will be uploaded:');
-            $this->listing($this->filesChanged);
-        }
-
-        $this->filesToDelete = $this->filterIgnoredFiles($this->filesToDelete);
-
-        if ($this->filesToDelete) {
-            $this->error('Following files will be deleted:');
-            $this->listing($this->filesToDelete);
-        }
-
-        if (!$this->filesChanged && !$this->filesToDelete) {
-            $this->warning('No files to deploy!');
-            exit;
-        }
+        $this->gatherFiles($files, false);
     }
 
     /**
@@ -353,6 +172,7 @@ class Git extends Base implements DriverInterface
         $zipName = $this->zipFile;
 
         if ($isRollback) {
+            // get revision ID before previous deployment revision id
             $remoteCommitId = $this->lastCommitIdRemote;
             $command = "git log --format=%H -n2 $remoteCommitId";
             $output = explode("\n", $this->exec($command));
@@ -394,11 +214,109 @@ class Git extends Base implements DriverInterface
     }
 
     /**
+     * @param $files
+     * @param $isRollback
+     */
+    protected function gatherFiles($files, $isRollback)
+    {
+        $type = $isRollback ? 'Rollback' : 'Deployment';
+
+        if (!is_array($files)) {
+            $this->warning("No files for $type!");
+            exit;
+        }
+
+        foreach ($files as $file) {
+
+            if (!trim($file)) {
+                continue;
+            }
+
+            if (strpos($file, 'warning: CRLF will be replaced by LF in') !== false) {
+                continue;
+            } elseif (strpos($file, 'original line endings in your working directory.') !== false) {
+                continue;
+            } elseif (strpos($file, 'fatal') !== false || strpos($file, 'error') !== false) {
+                $this->error($file);
+                exit;
+            }
+
+            $array = explode("\t", $file);
+
+            /*
+             * Git Status Codes
+             *
+             * A: addition of a file
+             * C: copy of a file into a new one
+             * D: deletion of a file
+             * M: modification of the contents or mode of a file
+             * R: renaming of a file
+             * T: change in the type of the file
+             * U: file is unmerged (you must complete the merge before it can be committed)
+             * X: "unknown" change type (most probably a bug, please report it)
+             */
+
+            if (isset($array[0]) && isset($array[1])) {
+                $type = $array[0];
+                $path = $array[1];
+
+                if ($type === 'A' || $type === 'C' || $type === 'M' || $type === 'T') {
+                    $this->filesChanged[] = $path;
+                } elseif ($type === 'D') {
+                    $this->filesToDelete[] = $path;
+                }
+            }
+        }
+
+        $this->filesChanged = $this->filterIgnoredFiles($this->filesChanged);
+
+        if ($this->filesChanged) {
+
+            if ($isRollback) {
+                $this->success('Following files were uploaded in previous deployment:');
+            } else {
+                $this->success('Following files will be uploaded:');
+            }
+
+            $this->listing($this->filesChanged);
+        }
+
+        $this->filesToDelete = $this->filterIgnoredFiles($this->filesToDelete);
+
+        if ($this->filesToDelete) {
+            if ($isRollback) {
+                $this->error('Following files were deleted in previous deployment:');
+            } else {
+                $this->error('Following files will be deleted:');
+            }
+
+            $this->listing($this->filesToDelete);
+        }
+
+        if (!$this->filesChanged && !$this->filesToDelete) {
+            $this->warning("No files for $type!");
+            exit;
+        }
+    }
+
+    /**
      * @param bool $isRollback
      * @return mixed
      */
     protected function uploadDeployFiles($isRollback = false)
     {
+        $type = $isRollback ? 'Rollback' : 'Deployment';
+
+        if (!$this->filesChanged) {
+            if ($this->filesToDelete) {
+                $this->deleteFiles();
+                $this->successBG("$type Finished");
+            } else {
+                $this->warning("No files for $type!");
+            }
+            exit;
+        }
+
         // create zip
         $this->success('Creating archive of files to upload...');
         $this->createZipOfChangedFiles($isRollback);
@@ -409,7 +327,7 @@ class Git extends Base implements DriverInterface
             // most likely there were too many files so command became too long
             // and archive file could not be created. Here we use alternative method
             // using sh.exe.
-            // Ref: https://stackoverflow.com/questions/24456200/git-archive-the-input-line-is-too-long-error-in-batch-file
+            // Ref: http://tinyurl.com/yb5nxna7
 
             $lastCommitId = $this->lastCommitId;
             $lastCommitIdRemote = $this->lastCommitIdRemote;
@@ -444,5 +362,38 @@ class Git extends Base implements DriverInterface
             $this->error('Could not upload archive file.');
             exit;
         }
+
+        $response = file_get_contents($this->options['domain'] . $this->options['public_path'] . $this->extractScriptFile);
+
+        if ($response === 'ok') {
+            // delete script file
+            $this->connector->deleteAt($this->options['public_path'] . $this->extractScriptFile);
+
+            $this->success('Extracting files...');
+
+            if ($this->filesToDelete) {
+                $this->deleteFiles();
+            }
+
+            // delete deployment file
+            $this->connector->delete($this->zipFile);
+
+            // update .rev file with new commit id
+            if (!$isRollback) {
+                $uploadStatus = $this->connector->write($this->revFile, $this->lastCommitId);
+
+                if (!$uploadStatus) {
+                    $this->error('Could not update revision file.');
+                    exit;
+                }
+            }
+
+            $this->successBG("$type Finished");
+        } else {
+            $this->error('Unknown Error!');
+        }
+
+        @unlink($this->zipFile);
+        @unlink($this->extractScriptFile);
     }
 }
