@@ -366,10 +366,13 @@ class Git extends Base implements DriverInterface
         $response = file_get_contents($this->options['domain'] . $this->options['public_path'] . $this->extractScriptFile);
 
         if ($response === 'ok') {
+
+            $this->success('Files uploaded successfully...');
+
             // delete script file
             $this->connector->deleteAt($this->options['public_path'] . $this->extractScriptFile);
 
-            $this->success('Extracting files...');
+            $this->success('Finishing, please wait...');
 
             if ($this->filesToDelete) {
                 $this->deleteFiles();
