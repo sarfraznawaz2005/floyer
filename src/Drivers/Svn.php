@@ -30,7 +30,7 @@ class Svn extends Base implements DriverInterface
         @unlink($this->exportFolder . '.bat');
         $this->recursiveRmDir($this->dir . $this->exportFolder);
 
-        //$this->checkDirty();
+        $this->checkDirty();
 
         $this->line($this->filesToUpload());
 

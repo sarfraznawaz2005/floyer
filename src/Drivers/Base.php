@@ -44,6 +44,10 @@ Abstract class Base
 
         $this->options = $this->getOptions();
 
+        if (isset($this->options['revision_file_name']) && trim($this->options['revision_file_name'])) {
+            $this->revFile = $this->options['revision_file_name'];
+        }
+
         $this->filesToExclude = array_merge($this->filesToExclude, $this->options['exclude']);
     }
 
