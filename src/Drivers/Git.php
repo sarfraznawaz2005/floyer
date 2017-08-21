@@ -239,6 +239,8 @@ class Git extends Base implements DriverInterface
                 exit;
             }
 
+            $file = str_replace("\t", " ", $file);
+
             $array = explode(" ", $file);
             // remove empty items
             $array = array_filter($array);

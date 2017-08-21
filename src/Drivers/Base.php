@@ -55,6 +55,11 @@ Abstract class Base
     {
         $command = str_replace("\n", "", $command);
 
+        // check debug mode
+        if (isset($this->options['debug']) && $this->options['debug'] == 1) {
+            $this->line('DEBUG: ' . $command);
+        }
+
         return shell_exec(escapeshellcmd($command) . ' 2>&1');
     }
 
