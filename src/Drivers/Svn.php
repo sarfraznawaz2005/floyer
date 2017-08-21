@@ -174,7 +174,7 @@ class Svn extends Base implements DriverInterface
 
         // if local and remoate commit ids are same, nothing to upload
         if ($localCommitId === $remoteCommitId) {
-            $this->success("No files to upload!");
+            $this->success("No files to process!");
             exit;
         }
 
@@ -301,7 +301,7 @@ SCRIPT;
     protected function gatherFiles($files, $isRollback)
     {
         if (!is_array($files)) {
-            $this->warning('No files for to process!');
+            $this->success("No files to process!");
             exit;
         }
 
@@ -386,7 +386,7 @@ SCRIPT;
         }
 
         if (!$this->filesChanged && !$this->filesToDelete) {
-            $this->warning('No files for to process!');
+            $this->success("No files to process!");
             exit;
         }
     }
@@ -404,7 +404,7 @@ SCRIPT;
                 $this->deleteFiles();
                 $this->successBG($type . " Finished");
             } else {
-                $this->warning('No files for to process!');
+                $this->success("No files to process!");
             }
             exit;
         }

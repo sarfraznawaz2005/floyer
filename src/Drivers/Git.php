@@ -149,7 +149,7 @@ class Git extends Base implements DriverInterface
 
         // if local and remoate commit ids are same, nothing to upload
         if ($localCommitId === $remoteCommitId) {
-            $this->success("No files to upload!");
+            $this->success("No files to process!");
             exit;
         }
 
@@ -220,7 +220,7 @@ class Git extends Base implements DriverInterface
     protected function gatherFiles($files, $isRollback)
     {
         if (!is_array($files)) {
-            $this->warning('No files to process!');
+            $this->success("No files to process!");
             exit;
         }
 
@@ -297,7 +297,7 @@ class Git extends Base implements DriverInterface
         }
 
         if (!$this->filesChanged && !$this->filesToDelete) {
-            $this->warning('No files to process!');
+            $this->success("No files to process!");
             exit;
         }
     }
@@ -315,7 +315,7 @@ class Git extends Base implements DriverInterface
                 $this->deleteFiles();
                 $this->successBG($type . " Finished");
             } else {
-                $this->warning('No files to process!');
+                $this->success("No files to process!");
             }
             exit;
         }
