@@ -35,6 +35,8 @@ To run deployment, just type this on terminal: `php floyer deploy`. See below fo
  - Rather than uploading each file individually (which is very **slow** process), it creates and uploads zip archive file to server where there is corresponding extract zip PHP script which extracts these files **very fast**. This script is also created and uploaded by Floyer.
  - After deployment is finished, zip archive and extract script is deleted automatically.
 
+Deploying by uploading and extracting archive file not only makes deployment fast but also we don't have to worry about some permission issues or creating new directories and so on because extract script runs from server itself thereby avoiding these issues.
+
 ## Current Limitations ##
 
 - Does not have multiple server support eg staging and production
