@@ -73,11 +73,6 @@ class Deploy extends Command
 
         $currentDirectory = getcwd();
 
-        if (!file_exists("$currentDirectory/.git")) {
-            $io->writeln("<fg=red>'{$currentDirectory}' is not a Git repository.</>");
-            exit;
-        }
-
         try {
             $options = $this->getOptions();
         } catch (\Exception $e) {
@@ -109,6 +104,18 @@ class Deploy extends Command
         if (!isset($options['connector'])) {
             $io->writeln("<fg=red>Connector is not specified in config file!</>");
             exit;
+        }
+
+        if ($options['driver'] === 'Git') {
+            if (!file_exists("$currentDirectory/.git")) {
+                $io->writeln("<fg=red>'{$currentDirectory}' is not a Git repository.</>");
+                exit;
+            }
+        } elseif ($options['driver'] === 'Svn') {
+            if (!file_exists("$currentDirectory/.svn")) {
+                $io->writeln("<fg=red>'{$currentDirectory}' is not a SVN repository.</>");
+                exit;
+            }
         }
 
         $driver = 'Sarfraznawaz2005\Floyer\Drivers\\' . $options['driver'];
