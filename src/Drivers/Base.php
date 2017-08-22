@@ -108,15 +108,18 @@ Abstract class Base
 
     protected function extractScript()
     {
-        $root = $this->options['root'];
-
+        $userRoot = $this->options['root'];
         $zipFile = $this->zipFile;
 
-        $script = <<< SCRIPT
+        return <<< SCRIPT
 <?php 
    set_time_limit(0);
    
-   \$root = \$_SERVER['DOCUMENT_ROOT'] . '$root';
+    \$root = \$_SERVER['DOCUMENT_ROOT'] . '/';
+    
+    if (false === strpos(\$root, '$userRoot')) {
+        \$root = \$_SERVER['DOCUMENT_ROOT'] . "/$userRoot";
+    }   
     
   \$zip = new ZipArchive();
   \$res = \$zip->open("\$root/$zipFile");
@@ -131,6 +134,5 @@ Abstract class Base
 
 SCRIPT;
 
-        return $script;
     }
 }

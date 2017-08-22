@@ -351,6 +351,10 @@ SCRIPT;
             $type = current($array);
             $path = next($array);
 
+            if (!trim($path) || $path == '.' || $path == '..') {
+                continue;
+            }
+
             if ($type && $path) {
                 if ($type === 'A' || $type === 'A+' || $type === 'M') {
                     $this->filesChanged[] = $path;
@@ -432,7 +436,7 @@ SCRIPT;
 
         $this->success('Uploading zip archive of files changed...');
 
-        $uploadStatus = $this->connector->upload($this->zipFile, $this->options['root']);
+        $uploadStatus = $this->connector->upload($this->zipFile, '/');
 
         if (!$uploadStatus) {
             $this->error('Could not upload archive file.');
@@ -469,9 +473,9 @@ SCRIPT;
                 }
             }
 
-            $this->successBG("$type Finished");
+            $this->successBG($type . " Finished");
         } else {
-            $this->error('Unknown Error!');
+            $this->error('Error: Unable to extract files.');
         }
 
         @unlink($this->zipFile);
