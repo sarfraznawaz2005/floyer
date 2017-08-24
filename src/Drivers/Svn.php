@@ -273,11 +273,35 @@ SCRIPT;
 
     function checkDirty()
     {
+        $dirtyTypes = [
+            'A',
+            'A+',
+            'M',
+            'D',
+        ];
+
         $status = $this->exec('svn status');
 
         if (trim($status)) {
-            $this->warning('Commit your modifications before deploying.');
-            exit;
+
+            $files = explode("\n", $status);
+
+            foreach ($files as $file) {
+                $file = str_replace("\t", " ", $file);
+
+                $array = explode(" ", $file);
+                // remove empty items
+                $array = array_filter($array);
+                $array = array_map('trim', $array);
+
+                $type = current($array);
+
+                if (in_array($type, $dirtyTypes)) {
+                    $this->warning('Commit your modifications before deploying.');
+                    exit;
+                }
+            }
+
         }
     }
 

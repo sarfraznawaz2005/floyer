@@ -8,7 +8,7 @@ Currently works for my needs but if you find any bugs or something missing, plea
 
 ## Introduction ##
 
-Floyer is simple and fast deployment tool using git/svn and FTP - especially useful for shared hosting.
+Floyer is simple and fast deployment tool using git/svn and (S)FTP - especially useful for shared hosting.
 
 To run deployment, just type this on terminal: `php floyer deploy`. See below for command options. 
 
@@ -42,7 +42,6 @@ Deploying by uploading and extracting archive file not only makes deployment fas
 
 - Does not have multiple server support eg staging and production
 - Works with current main git branch only
-- Currently only supports `FTP` connector
 - Not fully tested especially `rollback` feature
 
 ## Download ##
@@ -55,8 +54,8 @@ The phar version is present at `dist/floyer.phar`. Once you download it, copy it
 
 ## Extending ##
 
-- You can extend it by adding more connectors like `SFTP`, etc. Checkout existing connector in `src/Connectors/FTP.php`
-- You can extend it by improving existing `Svn` and `Git` drivers. Checkout existing drivers in `src/Drivers`
+- You can extend it by adding more connectors. Checkout existing connectors at `src/Connectors`
+- You can extend it by improving existing `Svn` and `Git` drivers. Checkout existing drivers at `src/Drivers`
 
 ## License ##
 

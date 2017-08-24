@@ -27,7 +27,7 @@ $phar->startBuffering();
 // https://bugs.php.net/bug.php?id=58169
 $phar->buildFromDirectory(
     dirname(__FILE__), 
-    '/(vendor\/composer|vendor\/league|vendor\/psr|vendor\/symfony)\/.*/'
+    '/(vendor\/composer|vendor\/league|vendor\/psr|vendor\/symfony|vendor\/phpseclib)\/.*/'
 );
 
 // Adding main file
@@ -35,6 +35,7 @@ $phar->addFile('floyer.php');
 $phar->addFile('floyer-sample.ini');
 $phar->addFile('src/Commands/Deploy.php');
 $phar->addFile('src/Connectors/FTP.php');
+$phar->addFile('src/Connectors/SFTP.php');
 $phar->addFile('src/Contracts/ConnectorInterface.php');
 $phar->addFile('src/Contracts/DriverInterface.php');
 $phar->addFile('src/Drivers/Base.php');

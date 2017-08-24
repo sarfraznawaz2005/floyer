@@ -24,7 +24,8 @@ class FTP implements ConnectorInterface
         try {
             $this->connector = new Filesystem(new FtpAdapter($this->getOptions()));
         } catch (\Exception $e) {
-            echo "\r\nOopps: {$e->getMessage()}\r\n";
+            echo "\r\nError: {$e->getMessage()}\r\n";
+            exit;
         }
     }
 
