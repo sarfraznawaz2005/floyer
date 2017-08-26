@@ -234,9 +234,6 @@ class Git extends Base implements DriverInterface
                 continue;
             } elseif (strpos($file, 'original line endings in your working directory.') !== false) {
                 continue;
-            } elseif (strpos($file, 'fatal') !== false || strpos($file, 'error') !== false) {
-                $this->error($file);
-                exit;
             }
 
             $file = str_replace("\t", " ", $file);
