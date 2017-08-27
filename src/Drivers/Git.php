@@ -375,14 +375,14 @@ class Git extends Base implements DriverInterface
 
             $this->success('Files uploaded successfully...');
 
-            // delete script file
-            $this->connector->deleteAt($this->options['public_path'] . $this->extractScriptFile);
-
             if ($this->filesToDelete) {
                 $this->deleteFiles();
             }
 
             $this->success('Finishing, please wait...');
+
+            // delete script file
+            $this->connector->deleteAt($this->options['public_path'] . $this->extractScriptFile);
 
             // delete deployment file
             $this->connector->delete($this->zipFile);
