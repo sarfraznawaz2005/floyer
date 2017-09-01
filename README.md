@@ -14,7 +14,7 @@ To run deployment, just type this on terminal: `php floyer deploy`. See below fo
 
 ## Screenshot ##
 
-![Main Window](https://raw.github.com/sarfraznawaz2005/floyer/master/screenshot.png)
+![Main Window](https://raw.githubusercontent.com/sarfraznawaz2005/floyer/master/screenshot.png)
 
 ## Requirements ##
 
