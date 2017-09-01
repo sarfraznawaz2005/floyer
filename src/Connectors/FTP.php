@@ -57,7 +57,7 @@ class FTP implements ConnectorInterface
 
     function delete($path)
     {
-        $this->delete(basename($path));
+        $this->deleteAt(basename($path));
     }
 
     function deleteAt($path)
