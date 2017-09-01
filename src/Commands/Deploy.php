@@ -130,8 +130,6 @@ class Deploy extends Command
             $driver = new $driver;
             $connector = new $connector;
 
-            $io->writeln("<fg=green>Connecting to remote server...</>");
-
             $connector->connect();
             $driver->setIO($io);
             $driver->init($connector);
