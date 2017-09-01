@@ -54,8 +54,7 @@ class Svn extends Base implements DriverInterface
         $uploadStatus = $this->connector->write($this->revFile, $this->lastCommitId);
 
         if (!$uploadStatus) {
-            $this->error('Could not update revision file.');
-            exit;
+            $this->oops('Could not update revision file.');
         }
 
         $this->success('Sync revision ID completed!');
@@ -93,8 +92,7 @@ class Svn extends Base implements DriverInterface
         $this->lastCommitIdRemote = $remoteCommitId = $this->lastCommitIdRemote();
 
         if (!trim($remoteCommitId)) {
-            $this->error('No remote revision found.');
-            exit;
+            $this->oops('No remote revision found.');
         }
 
         $prevRevision = $remoteCommitId - 1;
@@ -136,8 +134,7 @@ class Svn extends Base implements DriverInterface
             }
         }
 
-        $this->error('No local revision found.');
-        exit;
+        $this->oops('No local revision found.');
     }
 
     /**
@@ -163,13 +160,11 @@ class Svn extends Base implements DriverInterface
         $this->lastCommitIdRemote = $remoteCommitId = $this->lastCommitIdRemote();
 
         if (!trim($localCommitId)) {
-            $this->error('No local revision found.');
-            exit;
+            $this->oops('No local revision found.');
         }
 
         if (!trim($remoteCommitId)) {
-            $this->error('No remote revision found.');
-            exit;
+            $this->oops('No remote revision found.');
         }
 
         // if local and remoate commit ids are same, nothing to upload
@@ -240,8 +235,7 @@ SCRIPT;
         }
 
         if (!file_exists($destinationFolder)) {
-            $this->error('Could not create archive file!');
-            exit;
+            $this->oops('Could not create archive file!');
         }
 
         // remove those files from export folder which are excluded
@@ -439,8 +433,7 @@ SCRIPT;
         $this->createZipOfChangedFiles($isRollback);
 
         if (!file_exists($this->dir . $this->zipFile)) {
-            $this->error('Could not create archive file.');
-            exit;
+            $this->oops('Could not create archive file.');
         }
 
         $this->success('Uploading extract files script...');
@@ -451,8 +444,7 @@ SCRIPT;
         $uploadStatus = $this->connector->upload($this->extractScriptFile, $this->options['public_path']);
 
         if (!$uploadStatus) {
-            $this->error('Could not upload script file.');
-            exit;
+            $this->oops('Could not upload script file.');
         }
 
         $this->success('Uploading zip archive of files changed...');
@@ -460,8 +452,7 @@ SCRIPT;
         $uploadStatus = $this->connector->upload($this->zipFile, '/');
 
         if (!$uploadStatus) {
-            $this->error('Could not upload archive file.');
-            exit;
+            $this->oops('Could not upload archive file.');
         }
 
         $this->success('Extracting files on server...');
@@ -489,8 +480,7 @@ SCRIPT;
                 $uploadStatus = $this->connector->write($this->revFile, $this->lastCommitId);
 
                 if (!$uploadStatus) {
-                    $this->error('Could not update revision file.');
-                    exit;
+                    $this->oops('Could not update revision file.');
                 }
             }
 
@@ -566,5 +556,11 @@ SCRIPT;
         }
 
         return $zip->close();
+    }
+
+    protected function oops($message)
+    {
+        $this->error($message);
+        exit;
     }
 }

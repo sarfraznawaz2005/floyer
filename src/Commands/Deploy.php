@@ -34,6 +34,9 @@ class Deploy extends Command
         self::HISTORY => 'List files deployed in previous deployment.',
     ];
 
+    // vars
+    protected $currentDirectory = '';
+
     /**
      * Configure Command
      */
@@ -56,6 +59,8 @@ class Deploy extends Command
     protected function init()
     {
         set_time_limit(0);
+
+        $this->currentDirectory = getcwd();
     }
 
     /**
@@ -67,11 +72,11 @@ class Deploy extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $options = [];
+
         $io = new SymfonyStyle($input, $output);
 
         $this->floyer($output);
-
-        $currentDirectory = getcwd();
 
         try {
             $options = $this->getOptions();
@@ -87,8 +92,7 @@ class Deploy extends Command
                 }
             }
 
-            $currentDir = getcwd();
-            $configFile = $currentDir . '/floyer.ini';
+            $configFile = $this->currentDirectory . '/floyer.ini';
 
             if (!file_exists($configFile)) {
                 $io->writeln("<fg=red>'floyer.ini' does not exists!</>");
@@ -107,39 +111,47 @@ class Deploy extends Command
         }
 
         if ($options['driver'] === 'Git') {
-            if (!file_exists("$currentDirectory/.git")) {
-                $io->writeln("<fg=red>'{$currentDirectory}' is not a Git repository.</>");
+            if (!file_exists("{$this->currentDirectory}/.git")) {
+                $io->writeln("<fg=red>'{$this->currentDirectory}' is not a Git repository.</>");
                 exit;
             }
         } elseif ($options['driver'] === 'Svn') {
-            if (!file_exists("$currentDirectory/.svn")) {
-                $io->writeln("<fg=red>'{$currentDirectory}' is not a SVN repository.</>");
+            if (!file_exists("{$this->currentDirectory}/.svn")) {
+                $io->writeln("<fg=red>'{$this->currentDirectory}' is not a SVN repository.</>");
                 exit;
             }
         }
 
-        $driver = 'Sarfraznawaz2005\Floyer\Drivers\\' . $options['driver'];
-        $connector = 'Sarfraznawaz2005\Floyer\Connectors\\' . $options['connector'];
+        try {
 
-        $driver = new $driver;
-        $connector = new $connector;
+            $driver = 'Sarfraznawaz2005\Floyer\Drivers\\' . $options['driver'];
+            $connector = 'Sarfraznawaz2005\Floyer\Connectors\\' . $options['connector'];
 
-        $connector->connect();
-        $driver->setIO($io);
-        $driver->init($connector);
+            $driver = new $driver;
+            $connector = new $connector;
 
-        $isSync = $input->getOption(static::SYNC);
-        $isRollback = $input->getOption(static::ROLLBACK);
-        $isHistory = $input->getOption(static::HISTORY);
+            $io->success('Connecting to remote server...');
 
-        if ($isSync) {
-            $driver->sync();
-        } elseif ($isRollback) {
-            $driver->rollback();
-        } elseif ($isHistory) {
-            $driver->history();
-        } else {
-            $driver->processDeployment();
+            $connector->connect();
+            $driver->setIO($io);
+            $driver->init($connector);
+
+            $isSync = $input->getOption(static::SYNC);
+            $isRollback = $input->getOption(static::ROLLBACK);
+            $isHistory = $input->getOption(static::HISTORY);
+
+            if ($isSync) {
+                $driver->sync();
+            } elseif ($isRollback) {
+                $driver->rollback();
+            } elseif ($isHistory) {
+                $driver->history();
+            } else {
+                $driver->processDeployment();
+            }
+
+        } catch (\Exception $e) {
+            $io->error($e->getMessage());
         }
     }
 
@@ -155,15 +167,14 @@ class Deploy extends Command
 
     protected function createConfigFile(SymfonyStyle $io)
     {
-        $currentDir = getcwd();
-        $configFile = $currentDir . '/floyer.ini';
+        $configFile = $this->currentDirectory . '/floyer.ini';
 
         if (file_exists($configFile)) {
             $io->writeln("<fg=green>'floyer.ini' already exists!</>");
             exit;
         }
 
-        file_put_contents($currentDir . '/floyer.ini', file_get_contents('floyer-sample.ini'));
+        file_put_contents($this->currentDirectory . '/floyer.ini', file_get_contents('floyer-sample.ini'));
 
         if (file_exists($configFile)) {
             $io->writeln("<fg=green>'floyer.ini' created successfully.</>");
