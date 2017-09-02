@@ -8,20 +8,20 @@
 
 namespace Sarfraznawaz2005\Floyer\Drivers;
 
+use RecursiveIteratorIterator;
 use Sarfraznawaz2005\Floyer\Contracts\DriverInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 class Git extends Base implements DriverInterface
 {
+    protected $exportFolder = 'floyer_git_export';
+
     /**
      * Starts deployment process
      */
     function processDeployment()
     {
         $this->title('Getting list of changed files...');
-
-        @unlink($this->zipFile);
-        @unlink($this->extractScriptFile);
 
         $this->checkDirty();
 
@@ -59,9 +59,6 @@ class Git extends Base implements DriverInterface
     function rollback()
     {
         $this->history();
-
-        @unlink($this->zipFile);
-        @unlink($this->extractScriptFile);
 
         if ($this->confirm('Do you want to proceed with rollback?')) {
             $this->successBG('Rollback Started');
@@ -182,7 +179,7 @@ class Git extends Base implements DriverInterface
 
         $command = "git archive --output=$zipName $target " . implode(' ', $this->filesChanged);
 
-        $this->exec($command);
+        @$this->exec($command);
     }
 
     function checkDirty()
@@ -304,6 +301,10 @@ class Git extends Base implements DriverInterface
      */
     protected function uploadDeployFiles($isRollback = false)
     {
+        @unlink($this->zipFile);
+        @unlink($this->extractScriptFile);
+        $this->recursiveRmDir($this->exportFolder);
+
         $type = $isRollback ? 'Rollback' : 'Deployment';
 
         if (!$this->filesChanged) {
@@ -333,7 +334,12 @@ class Git extends Base implements DriverInterface
             $zipFile = $this->zipFile;
 
             $command = "sh -c 'git archive -o $zipFile HEAD $(git diff --name-only $lastCommitIdRemote $lastCommitId)'";
-            $this->exec($command);
+            $result = $this->exec($command);
+
+            if (false !== strpos($result, 'Argument list too long')) {
+                // git arhive max file limit reached, so we create achive file manually
+                $this->createZipOfChangedFilesManually($isRollback);
+            }
         }
 
         if (!file_exists($this->dir . $this->zipFile)) {
@@ -395,11 +401,84 @@ class Git extends Base implements DriverInterface
 
         @unlink($this->zipFile);
         @unlink($this->extractScriptFile);
+        $this->recursiveRmDir($this->exportFolder);
     }
 
     protected function oops($message)
     {
         $this->error($message);
         exit;
+    }
+
+    protected function createZipOfChangedFilesManually($isRollback)
+    {
+        if ($isRollback) {
+            $remoteCommitId = $this->lastCommitIdRemote;
+
+            // get revision ID before previous deployment revision id
+            $command = "git log --format=%H -n2 $remoteCommitId";
+            $output = explode("\n", $this->exec($command));
+
+            if (isset($output[1])) {
+                $target = $output[1];
+            } else {
+                $this->oops('Could not find commit hash to rollback');
+            }
+
+            $command = 'git diff-tree --no-commit-id --name-status -r ' . $target;
+
+            $output = $this->exec($command);
+
+            $files = explode("\n", $output);
+
+            $this->gatherFiles($files, true);
+        }
+
+        // copy files manually to specified folder and then we will zip them //
+        if (!file_exists($this->exportFolder)) {
+            mkdir($this->exportFolder, 0777);
+        }
+
+        foreach ($this->filesChanged as $file) {
+            $folder = $this->exportFolder . DIRECTORY_SEPARATOR . dirname($file);
+
+            if (!file_exists($folder)) {
+                @mkdir($folder, 0777, true);
+            }
+
+            if (!file_exists($this->exportFolder . DIRECTORY_SEPARATOR . $file)) {
+                copy($file, $this->exportFolder . DIRECTORY_SEPARATOR . $file);
+            }
+        }
+
+        // remove those files from export folder which are excluded
+        $iterator = new RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($this->dir . $this->exportFolder,
+                \FilesystemIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::CHILD_FIRST
+        );
+
+        foreach ($iterator as $filename => $fileInfo) {
+            $pathArray = explode($this->exportFolder, $filename);
+            $currentFile = trim($pathArray[1], '\\');
+            $currentFile = str_replace('\\', '/', $currentFile);
+
+            if (in_array(trim($currentFile), $this->filesChanged)) {
+                continue;
+            }
+
+            if (!$fileInfo->isDir()) {
+                @unlink($filename);
+            }
+        }
+
+        // now create zip file of these files
+        $this->zipData($this->dir . $this->exportFolder, $this->zipFile);
+
+        $this->recursiveRmDir($this->exportFolder);
+
+        if (!file_exists($this->dir . $this->zipFile)) {
+            $this->oops('Could not create archive file!');
+        }
     }
 }

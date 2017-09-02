@@ -8,11 +8,9 @@
 
 namespace Sarfraznawaz2005\Floyer\Drivers;
 
-use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use Sarfraznawaz2005\Floyer\Contracts\DriverInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use ZipArchive;
 
 class Svn extends Base implements DriverInterface
 {
@@ -24,11 +22,6 @@ class Svn extends Base implements DriverInterface
     function processDeployment()
     {
         $this->title('Getting list of changed files...');
-
-        @unlink($this->zipFile);
-        @unlink($this->extractScriptFile);
-        @unlink($this->exportFolder . '.bat');
-        $this->recursiveRmDir($this->dir . $this->exportFolder);
 
         $this->checkDirty();
 
@@ -66,11 +59,6 @@ class Svn extends Base implements DriverInterface
     function rollback()
     {
         $this->history();
-
-        @unlink($this->zipFile);
-        @unlink($this->extractScriptFile);
-        @unlink($this->exportFolder . '.bat');
-        $this->recursiveRmDir($this->dir . $this->exportFolder);
 
         if ($this->confirm('Do you want to proceed with rollback?')) {
             $this->successBG('Rollback Started');
@@ -188,16 +176,18 @@ class Svn extends Base implements DriverInterface
      */
     function createZipOfChangedFiles($isRollback = false)
     {
-        $localCommitId = $this->lastCommitId;
         $destinationFolder = $this->dir . $this->exportFolder;
         $remoteCommitId = $this->lastCommitIdRemote;
 
+        if (!$isRollback) {
+            /*
         // we could not find a way to svn export between two versions via "svn export" command
         // so here we create batch script that will export files in a folder and from there
         // we will use PHP to add these files to zip file. This might not work on non-windows
         // systems.
 
-        if (!$isRollback) {
+            $localCommitId = $this->lastCommitId;
+
             $script = <<< SCRIPT
 @echo off
 
@@ -216,6 +206,24 @@ SCRIPT;
             $command = "$this->exportFolder.bat $remoteCommitId:$localCommitId $this->exportFolder";
 
             $this->exec($command);
+            */
+
+            // copy files manually to specified folder and then we will zip them //
+            if (!file_exists($this->exportFolder)) {
+                mkdir($this->exportFolder, 0777);
+            }
+
+            foreach ($this->filesChanged as $file) {
+                $folder = $this->exportFolder . DIRECTORY_SEPARATOR . dirname($file);
+
+                if (!file_exists($folder)) {
+                    @mkdir($folder, 0777, true);
+                }
+
+                if (!file_exists($this->exportFolder . DIRECTORY_SEPARATOR . $file)) {
+                    copy($file, $this->exportFolder . DIRECTORY_SEPARATOR . $file);
+                }
+            }
 
         } else {
 
@@ -249,7 +257,7 @@ SCRIPT;
             $pathArray = explode($this->exportFolder, $filename);
             $currentFile = trim($pathArray[1], '\\');
 
-            if (in_array($currentFile, $this->filesChanged)) {
+            if (in_array(trim($currentFile), $this->filesChanged)) {
                 continue;
             }
 
@@ -261,7 +269,8 @@ SCRIPT;
         // now create zip file of these files
         $this->zipData($destinationFolder, $this->zipFile);
 
-        @unlink($this->exportFolder . '.bat');
+        //@unlink($this->exportFolder . '.bat');
+
         $this->recursiveRmDir($destinationFolder);
     }
 
@@ -416,6 +425,11 @@ SCRIPT;
      */
     protected function uploadDeployFiles($isRollback = false)
     {
+        @unlink($this->zipFile);
+        @unlink($this->extractScriptFile);
+        //@unlink($this->exportFolder . '.bat');
+        $this->recursiveRmDir($this->dir . $this->exportFolder);
+
         $type = $isRollback ? 'Rollback' : 'Deployment';
 
         if (!$this->filesChanged) {
@@ -491,71 +505,9 @@ SCRIPT;
 
         @unlink($this->zipFile);
         @unlink($this->extractScriptFile);
-    }
+        //@unlink($this->exportFolder . '.bat');
+        $this->recursiveRmDir($this->dir . $this->exportFolder);
 
-    protected function recursiveRmDir($dir)
-    {
-        if (!file_exists($dir) || !is_dir($dir)) {
-            return false;
-        }
-
-        $iterator = new RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS),
-            \RecursiveIteratorIterator::CHILD_FIRST);
-
-        foreach ($iterator as $filename => $fileInfo) {
-            if ($fileInfo->isDir()) {
-                rmdir($filename);
-            } else {
-                unlink($filename);
-            }
-        }
-
-        @rmdir($dir);
-    }
-
-    protected function zipData($source, $destination)
-    {
-        if (!extension_loaded('zip') || !file_exists($source)) {
-            return false;
-        }
-
-        $zip = new ZipArchive();
-        if (!$zip->open($destination, ZIPARCHIVE::CREATE)) {
-            return false;
-        }
-
-        $source = str_replace('\\', '/', realpath($source));
-
-        if (is_dir($source) === true) {
-            $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($source),
-                RecursiveIteratorIterator::SELF_FIRST);
-
-            foreach ($files as $file) {
-                $file = str_replace('\\', '/', $file);
-
-                // Ignore "." and ".." folders
-                if (in_array(substr($file, strrpos($file, '/') + 1), array('.', '..'))) {
-                    continue;
-                }
-
-                if (is_dir($file) === true) {
-                    $zip->addEmptyDir(str_replace($source . '/', '', $file));
-                } else {
-                    if (is_file($file) === true) {
-
-                        $str1 = str_replace($source . '/', '', '/' . $file);
-                        $zip->addFromString($str1, file_get_contents($file));
-
-                    }
-                }
-            }
-        } else {
-            if (is_file($source) === true) {
-                $zip->addFromString(basename($source), file_get_contents($source));
-            }
-        }
-
-        return $zip->close();
     }
 
     protected function oops($message)
