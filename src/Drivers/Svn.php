@@ -77,14 +77,14 @@ class Svn extends Base implements DriverInterface
     {
         $this->title('Getting list of changed files in previous deployment:');
 
-        $this->lastCommitIdRemote = $remoteCommitId = $this->lastCommitIdRemote();
+        $this->lastCommitIdRemote = $this->lastCommitIdRemote();
 
-        if (!trim($remoteCommitId)) {
+        if (!trim($this->lastCommitIdRemote)) {
             $this->oops('No remote revision found.');
         }
 
-        $prevRevision = $remoteCommitId - 1;
-        $command = 'svn diff -r ' . $prevRevision . ':' . $remoteCommitId . ' --summarize';
+        $prevRevision = $this->lastCommitIdRemote - 1;
+        $command = 'svn diff -r ' . $prevRevision . ':' . $this->lastCommitIdRemote . ' --summarize';
 
         $output = $this->exec($command);
 
@@ -144,24 +144,23 @@ class Svn extends Base implements DriverInterface
      */
     function filesToUpload()
     {
-        $localCommitId = $this->lastCommitId;
-        $this->lastCommitIdRemote = $remoteCommitId = $this->lastCommitIdRemote();
+        $this->lastCommitIdRemote = $this->lastCommitIdRemote();
 
-        if (!trim($localCommitId)) {
+        if (!trim($this->lastCommitId)) {
             $this->oops('No local revision found.');
         }
 
-        if (!trim($remoteCommitId)) {
+        if (!trim($this->lastCommitIdRemote)) {
             $this->oops('No remote revision found.');
         }
 
         // if local and remoate commit ids are same, nothing to upload
-        if ($localCommitId === $remoteCommitId) {
+        if ($this->lastCommitId === $this->lastCommitIdRemote) {
             $this->success("No files to process!");
             exit;
         }
 
-        $command = 'svn diff -r ' . $remoteCommitId . ':' . $localCommitId . ' --summarize';
+        $command = 'svn diff -r ' . $this->lastCommitIdRemote . ':' . $this->lastCommitId . ' --summarize';
 
         $output = $this->exec($command);
 
@@ -177,7 +176,6 @@ class Svn extends Base implements DriverInterface
     function createZipOfChangedFiles($isRollback = false)
     {
         $destinationFolder = $this->dir . $this->exportFolder;
-        $remoteCommitId = $this->lastCommitIdRemote;
 
         if (!$isRollback) {
             /*
@@ -203,7 +201,7 @@ SCRIPT;
 
             file_put_contents($this->exportFolder . '.bat', $script);
 
-            $command = "$this->exportFolder.bat $remoteCommitId:$localCommitId $this->exportFolder";
+            $command = "$this->exportFolder.bat {$this->lastCommitIdRemote}:$localCommitId $this->exportFolder";
 
             $this->exec($command);
             */
@@ -229,7 +227,7 @@ SCRIPT;
 
             // since in svn revision numbers are in sequence so we just subtract 1
             // to get to one revision before current one.
-            $remoteCommitId -= 1;
+            $this->lastCommitIdRemote -= 1;
 
             foreach ($this->filesChanged as $file) {
                 $folder = $destinationFolder . DIRECTORY_SEPARATOR . dirname($file);
@@ -237,7 +235,7 @@ SCRIPT;
                 @mkdir($folder, 0777, true);
 
                 // svn export can dig a file out from past revision.
-                $command = "svn export -r $remoteCommitId --depth empty -q --force $file $folder";
+                $command = "svn export -r {$this->lastCommitIdRemote} --depth empty -q --force $file $folder";
                 $this->exec($command);
             }
         }
@@ -270,12 +268,16 @@ SCRIPT;
         $this->zipData($destinationFolder, $this->zipFile);
 
         //@unlink($this->exportFolder . '.bat');
-
         $this->recursiveRmDir($destinationFolder);
     }
 
     function checkDirty()
     {
+        @unlink($this->zipFile);
+        @unlink($this->extractScriptFile);
+        //@unlink($this->exportFolder . '.bat');
+        @$this->recursiveRmDir($this->dir . $this->exportFolder);
+
         $dirtyTypes = [
             'A',
             'A+',
@@ -293,7 +295,7 @@ SCRIPT;
                 $file = str_replace("\t", " ", $file);
 
                 $array = explode(" ", $file);
-                // remove empty items
+                // remove empty items and padding whitespace
                 $array = array_filter($array);
                 $array = array_map('trim', $array);
 
@@ -388,10 +390,10 @@ SCRIPT;
             }
         }
 
+        // do not upload excluded files
         $this->filesChanged = $this->filterIgnoredFiles($this->filesChanged);
 
         if ($this->filesChanged) {
-
             if ($isRollback) {
                 $this->success('Following files were uploaded in previous deployment:');
             } else {
@@ -401,6 +403,7 @@ SCRIPT;
             $this->listing($this->filesChanged);
         }
 
+        // do not delete excluded files
         $this->filesToDelete = $this->filterIgnoredFiles($this->filesToDelete);
 
         if ($this->filesToDelete) {
@@ -425,11 +428,6 @@ SCRIPT;
      */
     protected function uploadDeployFiles($isRollback = false)
     {
-        @unlink($this->zipFile);
-        @unlink($this->extractScriptFile);
-        //@unlink($this->exportFolder . '.bat');
-        $this->recursiveRmDir($this->dir . $this->exportFolder);
-
         $type = $isRollback ? 'Rollback' : 'Deployment';
 
         if (!$this->filesChanged) {
@@ -477,6 +475,11 @@ SCRIPT;
 
             $this->success('Files uploaded successfully...');
 
+            @unlink($this->zipFile);
+            @unlink($this->extractScriptFile);
+            //@unlink($this->exportFolder . '.bat');
+            @$this->recursiveRmDir($this->dir . $this->exportFolder);
+
             if ($this->filesToDelete) {
                 $this->deleteFiles();
             }
@@ -506,8 +509,7 @@ SCRIPT;
         @unlink($this->zipFile);
         @unlink($this->extractScriptFile);
         //@unlink($this->exportFolder . '.bat');
-        $this->recursiveRmDir($this->dir . $this->exportFolder);
-
+        @$this->recursiveRmDir($this->dir . $this->exportFolder);
     }
 
     protected function oops($message)

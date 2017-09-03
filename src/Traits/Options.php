@@ -42,6 +42,8 @@ trait Options
         $options['ssl'] = ($options['ssl'] ?: false);
         $options['port'] = ($options['port'] ?: 21);
 
+        $this->validateOptions($options);
+
         $options['root'] = $this->addSlashIfMissing($options['root']);
         $options['domain'] = $this->addSlashIfMissing($options['domain']);
         $options['public_path'] = $this->addSlashIfMissing($options['public_path']);
@@ -73,5 +75,43 @@ trait Options
         }
 
         return $path;
+    }
+
+    /**
+     * Validates important options
+     *
+     * @param array $options
+     * @throws \Exception
+     */
+    protected function validateOptions(array $options)
+    {
+        if (!trim($options['revision_file_name'])) {
+            throw new \Exception('"revision_file_name" option not specified in ini file!');
+        }
+
+        if (!trim($options['driver'])) {
+            throw new \Exception('"driver" option not specified in ini file!');
+        }
+
+        if (!trim($options['connector'])) {
+            throw new \Exception('"connector" option not specified in ini file!');
+        }
+
+        if (!trim($options['root'])) {
+            throw new \Exception('"root" option not specified in ini file!');
+        }
+
+        if (!trim($options['public_path'])) {
+            throw new \Exception('"public_path" option not specified in ini file!');
+        }
+
+        if (!trim($options['domain'])) {
+            throw new \Exception('"domain" option not specified in ini file!');
+        }
+
+        if (!filter_var($options['domain'], FILTER_VALIDATE_URL)) {
+            throw new \Exception('Invalid value for "domain" option!');
+        }
+
     }
 }

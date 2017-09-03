@@ -43,7 +43,7 @@ class Git extends Base implements DriverInterface
     {
         $this->success('Sync revision ID started...');
 
-        // update .rev file with new commit id
+        // update revision file with new commit id
         $uploadStatus = $this->connector->write($this->revFile, $this->lastCommitId);
 
         if (!$uploadStatus) {
@@ -77,13 +77,13 @@ class Git extends Base implements DriverInterface
     {
         $this->title('Getting list of changed files in previous deployment:');
 
-        $this->lastCommitIdRemote = $remoteCommitId = $this->lastCommitIdRemote();
+        $this->lastCommitIdRemote = $this->lastCommitIdRemote();
 
-        if (!trim($remoteCommitId)) {
+        if (!trim($this->lastCommitIdRemote)) {
             $this->oops('No remote revision found.');
         }
 
-        $command = 'git diff-tree --no-commit-id --name-status -r ' . $remoteCommitId;
+        $command = 'git diff-tree --no-commit-id --name-status -r ' . $this->lastCommitIdRemote;
 
         $output = $this->exec($command);
 
@@ -129,24 +129,23 @@ class Git extends Base implements DriverInterface
      */
     function filesToUpload()
     {
-        $localCommitId = $this->lastCommitId;
-        $this->lastCommitIdRemote = $remoteCommitId = $this->lastCommitIdRemote();
+        $this->lastCommitIdRemote = $this->lastCommitIdRemote();
 
-        if (!trim($localCommitId)) {
+        if (!trim($this->lastCommitId)) {
             $this->oops('No local revision found.');
         }
 
-        if (!trim($remoteCommitId)) {
+        if (!trim($this->lastCommitIdRemote)) {
             $this->oops('No remote revision found.');
         }
 
         // if local and remoate commit ids are same, nothing to upload
-        if ($localCommitId === $remoteCommitId) {
+        if ($this->lastCommitId === $this->lastCommitIdRemote) {
             $this->success("No files to process!");
             exit;
         }
 
-        $command = 'git diff --name-status ' . $remoteCommitId . ' ' . $localCommitId;
+        $command = 'git diff --name-status ' . $this->lastCommitIdRemote . ' ' . $this->lastCommitId;
 
         $output = $this->exec($command);
 
@@ -162,12 +161,10 @@ class Git extends Base implements DriverInterface
     function createZipOfChangedFiles($isRollback = false)
     {
         $target = 'HEAD';
-        $zipName = $this->zipFile;
 
         if ($isRollback) {
             // get revision ID before previous deployment revision id
-            $remoteCommitId = $this->lastCommitIdRemote;
-            $command = "git log --format=%H -n2 $remoteCommitId";
+            $command = "git log --format=%H -n2 {$this->lastCommitIdRemote}";
             $output = explode("\n", $this->exec($command));
 
             if (isset($output[1])) {
@@ -177,13 +174,17 @@ class Git extends Base implements DriverInterface
             }
         }
 
-        $command = "git archive --output=$zipName $target " . implode(' ', $this->filesChanged);
+        $command = "git archive --output={$this->zipFile} $target " . implode(' ', $this->filesChanged);
 
         @$this->exec($command);
     }
 
     function checkDirty()
     {
+        @unlink($this->zipFile);
+        @unlink($this->extractScriptFile);
+        @$this->recursiveRmDir($this->exportFolder);
+
         $gitStatus = $this->exec('git status --porcelain');
 
         if (trim($gitStatus)) {
@@ -231,7 +232,7 @@ class Git extends Base implements DriverInterface
             $file = str_replace("\t", " ", $file);
 
             $array = explode(" ", $file);
-            // remove empty items
+            // remove empty items and padding whitespace
             $array = array_filter($array);
             $array = array_map('trim', $array);
 
@@ -264,10 +265,10 @@ class Git extends Base implements DriverInterface
             }
         }
 
+        // do not upload excluded files
         $this->filesChanged = $this->filterIgnoredFiles($this->filesChanged);
 
         if ($this->filesChanged) {
-
             if ($isRollback) {
                 $this->success('Following files were uploaded in previous deployment:');
             } else {
@@ -277,6 +278,7 @@ class Git extends Base implements DriverInterface
             $this->listing($this->filesChanged);
         }
 
+        // do not delete excluded files
         $this->filesToDelete = $this->filterIgnoredFiles($this->filesToDelete);
 
         if ($this->filesToDelete) {
@@ -301,10 +303,6 @@ class Git extends Base implements DriverInterface
      */
     protected function uploadDeployFiles($isRollback = false)
     {
-        @unlink($this->zipFile);
-        @unlink($this->extractScriptFile);
-        $this->recursiveRmDir($this->exportFolder);
-
         $type = $isRollback ? 'Rollback' : 'Deployment';
 
         if (!$this->filesChanged) {
@@ -326,14 +324,9 @@ class Git extends Base implements DriverInterface
 
             // most likely there were too many files so command became too long
             // and archive file could not be created. Here we use alternative method
-            // using sh.exe.
-            // Ref: http://tinyurl.com/yb5nxna7
+            // using sh.exe
 
-            $lastCommitId = $this->lastCommitId;
-            $lastCommitIdRemote = $this->lastCommitIdRemote;
-            $zipFile = $this->zipFile;
-
-            $command = "sh -c 'git archive -o $zipFile HEAD $(git diff --name-only $lastCommitIdRemote $lastCommitId)'";
+            $command = "sh --login -i -c 'git archive -o {$this->zipFile} HEAD $(git diff --name-only {$this->lastCommitIdRemote} {$this->lastCommitId})'";
             $result = $this->exec($command);
 
             if (false !== strpos($result, 'Argument list too long')) {
@@ -373,6 +366,10 @@ class Git extends Base implements DriverInterface
 
             $this->success('Files uploaded successfully...');
 
+            @unlink($this->zipFile);
+            @unlink($this->extractScriptFile);
+            @$this->recursiveRmDir($this->exportFolder);
+
             if ($this->filesToDelete) {
                 $this->deleteFiles();
             }
@@ -401,7 +398,7 @@ class Git extends Base implements DriverInterface
 
         @unlink($this->zipFile);
         @unlink($this->extractScriptFile);
-        $this->recursiveRmDir($this->exportFolder);
+        @$this->recursiveRmDir($this->exportFolder);
     }
 
     protected function oops($message)
@@ -413,10 +410,8 @@ class Git extends Base implements DriverInterface
     protected function createZipOfChangedFilesManually($isRollback)
     {
         if ($isRollback) {
-            $remoteCommitId = $this->lastCommitIdRemote;
-
             // get revision ID before previous deployment revision id
-            $command = "git log --format=%H -n2 $remoteCommitId";
+            $command = "git log --format=%H -n2 {$this->lastCommitIdRemote}";
             $output = explode("\n", $this->exec($command));
 
             if (isset($output[1])) {

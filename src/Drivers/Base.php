@@ -47,9 +47,7 @@ Abstract class Base
 
         $this->options = $this->getOptions();
 
-        if (isset($this->options['revision_file_name']) && trim($this->options['revision_file_name'])) {
-            $this->revFile = $this->options['revision_file_name'];
-        }
+        $this->revFile = $this->options['revision_file_name'];
 
         $this->filesToExclude = array_merge($this->filesToExclude, $this->options['exclude']);
     }
@@ -88,12 +86,8 @@ Abstract class Base
         }
 
         $files = array_values($files);
-        return $files;
 
-        return [
-            'files' => $files,
-            'filesToSkip' => $filesToSkip,
-        ];
+        return $files;
     }
 
     /**
@@ -166,6 +160,7 @@ SCRIPT;
         }
 
         $zip = new ZipArchive();
+
         if (!$zip->open($destination, ZIPARCHIVE::CREATE)) {
             return false;
         }

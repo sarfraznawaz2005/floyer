@@ -100,27 +100,8 @@ class Deploy extends Command
             }
         }
 
-        if (!isset($options['driver'])) {
-            $io->writeln("<fg=red>Driver is not specified in config file!</>");
-            exit;
-        }
-
-        if (!isset($options['connector'])) {
-            $io->writeln("<fg=red>Connector is not specified in config file!</>");
-            exit;
-        }
-
-        if ($options['driver'] === 'Git') {
-            if (!file_exists("{$this->currentDirectory}/.git")) {
-                $io->writeln("<fg=red>'{$this->currentDirectory}' is not a Git repository.</>");
-                exit;
-            }
-        } elseif ($options['driver'] === 'Svn') {
-            if (!file_exists("{$this->currentDirectory}/.svn")) {
-                $io->writeln("<fg=red>'{$this->currentDirectory}' is not a SVN repository.</>");
-                exit;
-            }
-        }
+        // check to make sure we are good to go
+        $this->checkUp($options, $io);
 
         try {
 
@@ -176,6 +157,37 @@ class Deploy extends Command
 
         if (file_exists($configFile)) {
             $io->writeln("<fg=green>'floyer.ini' created successfully.</>");
+        }
+    }
+
+    /**
+     * Checks if everything is okay before we proceed
+     *
+     * @param $options
+     * @param $io
+     */
+    protected function checkUp($options, $io)
+    {
+        if (!isset($options['driver'])) {
+            $io->writeln("<fg=red>Driver is not specified in config file!</>");
+            exit;
+        }
+
+        if (!isset($options['connector'])) {
+            $io->writeln("<fg=red>Connector is not specified in config file!</>");
+            exit;
+        }
+
+        if ($options['driver'] === 'Git') {
+            if (!file_exists("{$this->currentDirectory}/.git")) {
+                $io->writeln("<fg=red>'{$this->currentDirectory}' is not a Git repository.</>");
+                exit;
+            }
+        } elseif ($options['driver'] === 'Svn') {
+            if (!file_exists("{$this->currentDirectory}/.svn")) {
+                $io->writeln("<fg=red>'{$this->currentDirectory}' is not a SVN repository.</>");
+                exit;
+            }
         }
     }
 }
