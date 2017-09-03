@@ -400,6 +400,8 @@ SCRIPT;
                 $this->success('Following files will be uploaded:');
             }
 
+            $this->success('Total:' . count($this->filesChanged));
+
             $this->listing($this->filesChanged);
         }
 
@@ -412,6 +414,8 @@ SCRIPT;
             } else {
                 $this->error('Following files will be deleted:');
             }
+
+            $this->success('Total:' . count($this->filesToDelete));
 
             $this->listing($this->filesToDelete);
         }

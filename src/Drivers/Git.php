@@ -275,6 +275,8 @@ class Git extends Base implements DriverInterface
                 $this->success('Following files will be uploaded:');
             }
 
+            $this->success('Total:' . count($this->filesChanged));
+
             $this->listing($this->filesChanged);
         }
 
@@ -287,6 +289,8 @@ class Git extends Base implements DriverInterface
             } else {
                 $this->error('Following files will be deleted:');
             }
+
+            $this->success('Total:' . count($this->filesToDelete));
 
             $this->listing($this->filesToDelete);
         }
