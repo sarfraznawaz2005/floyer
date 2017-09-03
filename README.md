@@ -2,7 +2,7 @@
 
 ## DISCLAIMER ##
 
-This tool is not fully tested and might be buggy. **Use it at your own risk!**
+This tool is not fully tested, **use it at your own risk!**
 
 Currently works for my needs but if you find any bugs or something missing, please do send PR. Thanks
 
@@ -21,6 +21,7 @@ To run deployment, just type this on terminal: `php floyer deploy`. See below fo
  - PHP >= 5.6
  - `git` added to PATH env (If using Git driver)
  - `svn` added to PATH env (If using Svn driver)
+ - `FTP` and `Zip` PHP extensions (both ship with PHP and usually turned on)
  
 ## Command Options ##
 
