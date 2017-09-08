@@ -14,8 +14,6 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class Svn extends Base implements DriverInterface
 {
-    protected $exportFolder = 'floyer_svn_export';
-
     /**
      * Starts deployment process
      */
@@ -175,7 +173,7 @@ class Svn extends Base implements DriverInterface
      */
     function createZipOfChangedFiles($isRollback = false)
     {
-        $destinationFolder = $this->dir . $this->exportFolder;
+        $destinationFolder = $this->exportFolder;
 
         if (!$isRollback) {
             /*
@@ -276,7 +274,7 @@ SCRIPT;
         @unlink($this->zipFile);
         @unlink($this->extractScriptFile);
         //@unlink($this->exportFolder . '.bat');
-        @$this->recursiveRmDir($this->dir . $this->exportFolder);
+        @$this->recursiveRmDir($this->exportFolder);
 
         $dirtyTypes = [
             'A',
@@ -448,7 +446,7 @@ SCRIPT;
         $this->success('Creating archive of files to upload...');
         $this->createZipOfChangedFiles($isRollback);
 
-        if (!file_exists($this->dir . $this->zipFile)) {
+        if (!file_exists($this->zipFile)) {
             $this->oops('Could not create archive file.');
         }
 
@@ -473,7 +471,7 @@ SCRIPT;
 
         $this->success('Extracting files on server...');
 
-        $response = file_get_contents($this->options['domain'] . $this->options['public_path'] . $this->extractScriptFile);
+        $response = file_get_contents($this->options['domain'] . $this->options['public_path'] . basename($this->extractScriptFile));
 
         if ($response === 'ok') {
 
@@ -482,7 +480,7 @@ SCRIPT;
             @unlink($this->zipFile);
             @unlink($this->extractScriptFile);
             //@unlink($this->exportFolder . '.bat');
-            @$this->recursiveRmDir($this->dir . $this->exportFolder);
+            @$this->recursiveRmDir($this->exportFolder);
 
             if ($this->filesToDelete) {
                 $this->deleteFiles();
@@ -513,7 +511,7 @@ SCRIPT;
         @unlink($this->zipFile);
         @unlink($this->extractScriptFile);
         //@unlink($this->exportFolder . '.bat');
-        @$this->recursiveRmDir($this->dir . $this->exportFolder);
+        @$this->recursiveRmDir($this->exportFolder);
     }
 
     protected function oops($message)

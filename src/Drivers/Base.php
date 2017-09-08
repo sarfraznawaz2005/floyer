@@ -25,7 +25,9 @@ Abstract class Base
     protected $revFile = '.rev_floyer';
     protected $zipFile = 'deployment_floyer.zip';
     protected $extractScriptFile = 'extract_floyer.php';
+    protected $exportFolder = 'floyer_svn_export';
     protected $dir = '';
+    protected $tmpDir = '';
 
     // console-related
     public $io = null;
@@ -48,6 +50,11 @@ Abstract class Base
         $this->options = $this->getOptions();
 
         $this->revFile = $this->options['revision_file_name'];
+
+        $this->tmpDir = $this->tmpDir();
+        $this->zipFile = $this->tmpDir . $this->zipFile;
+        $this->extractScriptFile = $this->tmpDir . $this->extractScriptFile;
+        $this->exportFolder = $this->tmpDir . $this->exportFolder;
 
         $this->filesToExclude = array_merge($this->filesToExclude, $this->options['exclude']);
     }
@@ -106,7 +113,7 @@ Abstract class Base
     protected function extractScript()
     {
         $userRoot = $this->options['root'];
-        $zipFile = $this->zipFile;
+        $zipFile = basename($this->zipFile);
 
         return <<< SCRIPT
 <?php 
@@ -197,5 +204,18 @@ SCRIPT;
         }
 
         return $zip->close();
+    }
+
+    protected function tmpDir()
+    {
+        $dir = ini_get('upload_tmp_dir') ?: sys_get_temp_dir();
+        $dir = trim($dir);
+
+        if ($dir && substr($dir, -1, 1) !== '/') {
+            $dir = $dir . '/';
+            return $dir;
+        }
+
+        return '';
     }
 }

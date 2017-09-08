@@ -14,8 +14,6 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class Git extends Base implements DriverInterface
 {
-    protected $exportFolder = 'floyer_git_export';
-
     /**
      * Starts deployment process
      */
@@ -323,8 +321,8 @@ class Git extends Base implements DriverInterface
         $this->success('Creating archive of files to upload...');
         $this->createZipOfChangedFiles($isRollback);
 
-        // check if zip exists locally
-        if (!file_exists($this->dir . $this->zipFile)) {
+        // check if zip exists
+        if (!file_exists($this->zipFile)) {
 
             // most likely there were too many files so command became too long
             // and archive file could not be created. Here we use alternative method
@@ -339,7 +337,7 @@ class Git extends Base implements DriverInterface
             }
         }
 
-        if (!file_exists($this->dir . $this->zipFile)) {
+        if (!file_exists($this->zipFile)) {
             $this->oops('Could not create archive file.');
         }
 
@@ -364,7 +362,7 @@ class Git extends Base implements DriverInterface
 
         $this->success('Extracting files on server...');
 
-        $response = file_get_contents($this->options['domain'] . $this->options['public_path'] . $this->extractScriptFile);
+        $response = file_get_contents($this->options['domain'] . $this->options['public_path'] . basename($this->extractScriptFile));
 
         if ($response === 'ok') {
 
@@ -452,7 +450,7 @@ class Git extends Base implements DriverInterface
 
         // remove those files from export folder which are excluded
         $iterator = new RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($this->dir . $this->exportFolder,
+            new \RecursiveDirectoryIterator($this->exportFolder,
                 \FilesystemIterator::SKIP_DOTS),
             \RecursiveIteratorIterator::CHILD_FIRST
         );
@@ -472,11 +470,11 @@ class Git extends Base implements DriverInterface
         }
 
         // now create zip file of these files
-        $this->zipData($this->dir . $this->exportFolder, $this->zipFile);
+        $this->zipData($this->exportFolder, $this->zipFile);
 
         $this->recursiveRmDir($this->exportFolder);
 
-        if (!file_exists($this->dir . $this->zipFile)) {
+        if (!file_exists($this->zipFile)) {
             $this->oops('Could not create archive file!');
         }
     }
