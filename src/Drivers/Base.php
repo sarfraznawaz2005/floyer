@@ -82,6 +82,10 @@ Abstract class Base
     {
         $filesToSkip = [];
 
+        $files = array_map(function ($file) {
+            return str_replace('\\', '/', $file);
+        }, $files);
+
         foreach ($files as $i => $file) {
             foreach ($this->filesToExclude as $pattern) {
                 if ($this->patternMatch($pattern, $file)) {
