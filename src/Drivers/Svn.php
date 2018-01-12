@@ -265,7 +265,6 @@ SCRIPT;
         // now create zip file of these files
         $this->zipData($destinationFolder, $this->zipFile);
 
-        //@unlink($this->exportFolder . '.bat');
         $this->recursiveRmDir($destinationFolder);
     }
 
@@ -273,7 +272,6 @@ SCRIPT;
     {
         @unlink($this->zipFile);
         @unlink($this->extractScriptFile);
-        //@unlink($this->exportFolder . '.bat');
         @$this->recursiveRmDir($this->exportFolder);
 
         $dirtyTypes = [
