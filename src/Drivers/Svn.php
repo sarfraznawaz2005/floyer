@@ -252,6 +252,7 @@ SCRIPT;
         foreach ($iterator as $filename => $fileInfo) {
             $pathArray = explode($this->exportFolder, $filename);
             $currentFile = trim($pathArray[1], '\\');
+            $currentFile = str_replace('\\', '/', $currentFile);
 
             if (in_array(trim($currentFile), $this->filesChanged)) {
                 continue;
