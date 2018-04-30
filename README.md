@@ -58,6 +58,9 @@ The phar version is present at `dist/floyer.phar`. Once you download it, copy it
 - You can extend it by adding more connectors. Checkout existing connectors at `src/Connectors`
 - You can extend it by improving existing `Svn` and `Git` drivers. Checkout existing drivers at `src/Drivers`
 
+## Similar Project ##
+ - [gitup](https://github.com/sarfraznawaz2005/gitup)
+
 ## License ##
 
 This code is published under the [MIT License](http://opensource.org/licenses/MIT).
