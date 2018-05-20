@@ -25,7 +25,7 @@ Abstract class Base
     protected $revFile = '.rev_floyer';
     protected $zipFile = 'deployment_floyer.zip';
     protected $extractScriptFile = 'extract_floyer.php';
-    protected $exportFolder = 'floyer_svn_export';
+    protected $exportFolder = 'floyer_export';
     protected $dir = '';
     protected $tmpDir = '';
 

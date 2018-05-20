@@ -11,7 +11,7 @@ namespace Sarfraznawaz2005\Floyer\Traits;
 trait Options
 {
     protected $repo = '';
-    protected $iniFileName = 'floyer.ini';
+    public $iniFile = '';
 
     public function getOptions()
     {
@@ -29,7 +29,7 @@ trait Options
             'ssl' => false,
         ];
 
-        $iniFile = $this->repo . DIRECTORY_SEPARATOR . $this->iniFileName;
+        $iniFile = $this->iniFile;
 
         $options = $this->parseIniFile($iniFile);
 

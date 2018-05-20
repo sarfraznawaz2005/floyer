@@ -10,6 +10,7 @@ namespace Sarfraznawaz2005\Floyer\Commands;
 
 use Sarfraznawaz2005\Floyer\Traits\Options;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -23,9 +24,15 @@ class Deploy extends Command
     protected $commandDescription = "Starts deployment process.";
 
     // constants
+    const CONFIG_FILE = 'config';
     const SYNC = 'sync';
     const ROLLBACK = 'rollback';
     const HISTORY = 'history';
+
+    // required arguments
+    protected $arguments = [
+        self::CONFIG_FILE => 'Config file to use.',
+    ];
 
     // our options
     protected $options = [
@@ -44,6 +51,11 @@ class Deploy extends Command
     {
         $this->setName($this->commandName);
         $this->setDescription($this->commandDescription);
+
+        // attach arguments
+        foreach ($this->arguments as $name => $description) {
+            $this->addArgument($name, InputArgument::OPTIONAL, $description);
+        }
 
         // attach options
         foreach ($this->options as $name => $description) {
@@ -72,33 +84,36 @@ class Deploy extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $options = [];
-
         $io = new SymfonyStyle($input, $output);
 
-        $this->floyer($output);
+        if (!trim($input->getArgument(static::CONFIG_FILE))) {
+            $defaultServer = $this->currentDirectory . DIRECTORY_SEPARATOR . 'floyer_default_server.txt';
 
-        try {
-            $options = $this->getOptions();
-        } catch (\Exception $e) {
-            $message = $e->getMessage();
+            if (file_exists($defaultServer)) {
+                $defaultConfigFile = file_get_contents($defaultServer);
 
-            if (false !== strpos($message, 'does not exist')) {
-                if ($io->confirm("<fg=yellow>Floyer config file does not exist. Would you like to create it now ?</>")) {
-                    $this->createConfigFile($io);
-
-                    // re-read options
-                    $options = $this->getOptions();
+                if (trim($defaultConfigFile)) {
+                    $configFile = $this->currentDirectory . DIRECTORY_SEPARATOR . trim($defaultConfigFile);
                 }
             }
 
-            $configFile = $this->currentDirectory . '/floyer.ini';
-
-            if (!file_exists($configFile)) {
-                $io->writeln("<fg=red>'floyer.ini' does not exists!</>");
-                exit;
-            }
+        } else {
+            $configFile = $this->currentDirectory . DIRECTORY_SEPARATOR . $input->getArgument(static::CONFIG_FILE);
         }
+
+        if (!file_exists($configFile)) {
+            $io->writeln("<fg=red>'$configFile' does not exists!</>");
+            exit;
+        }
+
+        $this->floyer($output);
+
+        $this->iniFile = $configFile;
+
+        $options = $this->getOptions();
+
+        $server = basename($configFile);
+        $io->note("Server Used: $server");
 
         // check to make sure we are good to go
         $this->checkUp($options, $io);
@@ -142,22 +157,6 @@ class Deploy extends Command
         $output->writeln('<fg=black;bg=green>-------------------------------------------------</>');
         $output->writeln('<fg=black;bg=green>|                     Floyer                    |</>');
         $output->writeln('<fg=black;bg=green>-------------------------------------------------</>');
-    }
-
-    protected function createConfigFile(SymfonyStyle $io)
-    {
-        $configFile = $this->currentDirectory . '/floyer.ini';
-
-        if (file_exists($configFile)) {
-            $io->writeln("<fg=green>'floyer.ini' already exists!</>");
-            exit;
-        }
-
-        file_put_contents($this->currentDirectory . '/floyer.ini', file_get_contents('floyer-sample.ini'));
-
-        if (file_exists($configFile)) {
-            $io->writeln("<fg=green>'floyer.ini' created successfully.</>");
-        }
     }
 
     /**

@@ -10,7 +10,7 @@ Currently works for my needs but if you find any bugs or something missing, plea
 
 Floyer is simple and fast deployment tool using git/svn and (S)FTP - especially useful for shared hosting.
 
-To run deployment, just type this on terminal: `php floyer deploy`. See below for command options. 
+To run deployment, just type this on terminal: `php floyer deploy ini_file_to_use`. See below for command options. 
 
 ## Screenshot ##
 
@@ -25,9 +25,9 @@ To run deployment, just type this on terminal: `php floyer deploy`. See below fo
  
 ## Command Options ##
 
-- `php floyer deploy --sync` : Synchronize last local revision id with remote revision file.
-- `php floyer deploy --history` : List files deployed in previous deployment.
-- `php floyer deploy --rollback` : Rollback previous deployment.
+- `php floyer deploy ini_file_to_use --sync` : Synchronize last local revision id with remote revision file.
+- `php floyer deploy ini_file_to_use --history` : List files deployed in previous deployment.
+- `php floyer deploy ini_file_to_use --rollback` : Rollback previous deployment.
 
 ## How it works ##
 
@@ -41,7 +41,6 @@ Deploying by uploading and extracting archive file not only makes deployment fas
 
 ## Current Limitations ##
 
-- Does not have multiple server support eg staging and production
 - Works with current main git branch only
 - Not fully tested especially `rollback` feature
 
@@ -49,9 +48,19 @@ Deploying by uploading and extracting archive file not only makes deployment fas
 
 The phar version is present at `dist/floyer.phar`. Once you download it, copy it to your project and issue this command at terminal:
 
-`php floyer.phar deploy` or if you rename `floyer.phar` to `floyer`:
+`php floyer.phar deploy ini_file_to_use` or if you rename `floyer.phar` to `floyer`:
 
-`php floyer deploy`
+`php floyer deploy ini_file_to_use`
+
+## Tip ##
+
+If you only upload to single server or don't want to type `ini_file_to_use` again and again, you can create a file called `floyer_default_server.txt` in project root directory and in that file type ini file name you want to use as default then you can skip typing `ini_file_to_use` in commands like:
+
+ `php floyer deploy`
+ 
+ `php floyer deploy --history`
+ 
+However, you can still use `ini_file_to_use` argument if you wish to upload to differnt server.
 
 ## Extending ##
 
