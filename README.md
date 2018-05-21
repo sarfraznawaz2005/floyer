@@ -10,11 +10,7 @@ Currently works for my needs but if you find any bugs or something missing, plea
 
 Floyer is simple and fast deployment tool using git/svn and (S)FTP - especially useful for shared hosting.
 
-To run deployment, just type this on terminal: `php floyer deploy ini_file_to_use`. 
-
-The `ini_file_to_use` is ini server config file that you can create copying from given sample file `floyer-sample.ini`. For different servers, you need to create different ini config files. 
-
-Because these ini config file contain server connection details, make sure to gitignore them too in your project.
+To run deployment, just type this on terminal: `php floyer deploy ini_file_to_use`. See below for commands.
 
 ## Screenshot ##
 
@@ -32,6 +28,10 @@ Because these ini config file contain server connection details, make sure to gi
 - `php floyer deploy ini_file_to_use --sync` : Synchronize last local revision id with remote revision file.
 - `php floyer deploy ini_file_to_use --history` : List files deployed in previous deployment.
 - `php floyer deploy ini_file_to_use --rollback` : Rollback previous deployment.
+
+The `ini_file_to_use` is ini server config file that you can create copying from given sample file `floyer-sample.ini`. For different servers, you need to create different ini config files. 
+
+Because these ini config file contain server connection details, make sure to gitignore them in your project.
 
 ## How it works ##
 
