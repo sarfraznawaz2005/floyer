@@ -15,11 +15,9 @@ class SFTP extends FTP
 {
     protected $connector = null;
 
-    function connect()
+    public function connect(array $options)
     {
         try {
-
-            $options = $this->getOptions();
 
             // see if key file exists
             if (!trim($options['key_file']) || !is_file($options['key_file'])) {

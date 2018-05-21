@@ -12,13 +12,11 @@ use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use Sarfraznawaz2005\Floyer\Contracts\ConnectorInterface;
 use Sarfraznawaz2005\Floyer\Traits\IO;
-use Sarfraznawaz2005\Floyer\Traits\Options;
 use ZipArchive;
 
 Abstract class Base
 {
     use IO;
-    use Options;
 
     protected $lastCommitId = '';
     protected $lastCommitIdRemote = '';
@@ -39,7 +37,7 @@ Abstract class Base
     protected $filesChanged = [];
     protected $filesToExclude = [];
 
-    public function init(ConnectorInterface $connector)
+    public function init(ConnectorInterface $connector, array $options)
     {
         $this->dir = getcwd() . DIRECTORY_SEPARATOR;
 
@@ -47,7 +45,7 @@ Abstract class Base
 
         $this->lastCommitId = $this->lastCommitIdLocal();
 
-        $this->options = $this->getOptions();
+        $this->options = $options;
 
         $this->revFile = $this->options['revision_file_name'];
 

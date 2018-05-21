@@ -11,25 +11,22 @@ namespace Sarfraznawaz2005\Floyer\Connectors;
 use League\Flysystem\Adapter\Ftp as FtpAdapter;
 use League\Flysystem\Filesystem;
 use Sarfraznawaz2005\Floyer\Contracts\ConnectorInterface;
-use Sarfraznawaz2005\Floyer\Traits\Options;
 
 class FTP implements ConnectorInterface
 {
-    use Options;
-
     protected $connector = null;
 
-    function connect()
+    public function connect(array $options)
     {
         try {
-            $this->connector = new Filesystem(new FtpAdapter($this->getOptions()));
+            $this->connector = new Filesystem(new FtpAdapter($options));
         } catch (\Exception $e) {
             echo "\r\nError: {$e->getMessage()}\r\n";
             exit;
         }
     }
 
-    function upload($path, $destination, $overwrite = true)
+    public function upload($path, $destination, $overwrite = true)
     {
         $destination = $destination . '/' . basename($path);
         $destination = str_replace('//', '/', $destination);
@@ -45,22 +42,22 @@ class FTP implements ConnectorInterface
         return $result;
     }
 
-    function exists($path)
+    public function exists($path)
     {
         return $this->connector->has(basename($path));
     }
 
-    function existsAt($path)
+    public function existsAt($path)
     {
         return $this->connector->has($path);
     }
 
-    function delete($path)
+    public function delete($path)
     {
         $this->deleteAt(basename($path));
     }
 
-    function deleteAt($path)
+    public function deleteAt($path)
     {
         try {
             if (!is_dir($path)) {
@@ -73,7 +70,7 @@ class FTP implements ConnectorInterface
         }
     }
 
-    function write($path, $contents, $overwrite = true)
+    public function write($path, $contents, $overwrite = true)
     {
         if ($overwrite && $this->exists($path)) {
             $this->delete($path);
@@ -82,7 +79,7 @@ class FTP implements ConnectorInterface
         return $this->connector->write(basename($path), $contents);
     }
 
-    function read($path)
+    public function read($path)
     {
         return $this->connector->read(basename($path));
     }

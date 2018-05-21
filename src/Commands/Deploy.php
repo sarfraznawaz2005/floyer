@@ -84,6 +84,8 @@ class Deploy extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $configFile = '';
+
         $io = new SymfonyStyle($input, $output);
 
         if (!trim($input->getArgument(static::CONFIG_FILE))) {
@@ -102,7 +104,7 @@ class Deploy extends Command
         }
 
         if (!file_exists($configFile)) {
-            $io->writeln("<fg=red>'$configFile' does not exists!</>");
+            $io->writeln("<fg=red>'$configFile' does not exist!</>");
             exit;
         }
 
@@ -126,9 +128,9 @@ class Deploy extends Command
             $driver = new $driver;
             $connector = new $connector;
 
-            $connector->connect();
+            $connector->connect($options);
             $driver->setIO($io);
-            $driver->init($connector);
+            $driver->init($connector, $options);
 
             $isSync = $input->getOption(static::SYNC);
             $isRollback = $input->getOption(static::ROLLBACK);

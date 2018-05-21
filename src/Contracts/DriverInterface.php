@@ -17,54 +17,54 @@ interface DriverInterface
      * @param SymfonyStyle $io
      * @return null
      */
-    function setIO(SymfonyStyle $io);
+    public function setIO(SymfonyStyle $io);
 
     /**
      * Initialize.
      * @param ConnectorInterface $connector
-     * @return
+     * @param array $options
      */
-    function init(ConnectorInterface $connector);
+    public function init(ConnectorInterface $connector, array $options);
 
     /**
      * Starts deployment process
      */
-    function processDeployment();
+    public function processDeployment();
 
     /**
      * Synchronize last local commit id with remote revision file.
      */
-    function sync();
+    public function sync();
 
     /**
      * Rollback previous deployment.
      */
-    function rollback();
+    public function rollback();
 
     /**
      * List files deployed in previous deployment.
      */
-    function history();
+    public function history();
 
     /**
      * Gets last local commit ID.
      */
-    function lastCommitIdLocal();
+    public function lastCommitIdLocal();
 
     /**
      * Gets last remoate/revision file commit ID.
      */
-    function lastCommitIdRemote();
+    public function lastCommitIdRemote();
 
     /**
      * Lists file to upload.
      */
-    function filesToUpload();
+    public function filesToUpload();
 
     /**
      * Creates zip file of files to upload.
      */
-    function createZipOfChangedFiles();
+    public function createZipOfChangedFiles();
 
-    function checkDirty();
+    public function checkDirty();
 }
