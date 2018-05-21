@@ -29,9 +29,12 @@ To run deployment, just type this on terminal: `php floyer deploy ini_file_to_us
 - `php floyer deploy ini_file_to_use --history` : List files deployed in previous deployment.
 - `php floyer deploy ini_file_to_use --rollback` : Rollback previous deployment.
 
-The `ini_file_to_use` is ini server config file that you can create copying from given sample file `floyer-sample.ini`. For different servers, you need to create different ini config files. 
+The `ini_file_to_use` is ini server config file that you can create copying from given sample file `floyer-sample.ini`. For different servers, you need to create different ini config files. For example:
 
-Because these ini config file contain server connection details, make sure to gitignore them in your project.
+- `php floyer deploy staging.ini` *upload to staging server*
+- `php floyer deploy live.ini` *upload to live server*
+
+**Note** Because these ini config file contain server connection details, make sure to gitignore them in your project.
 
 ## How it works ##
 
