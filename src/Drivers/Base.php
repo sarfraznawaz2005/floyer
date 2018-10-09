@@ -125,7 +125,9 @@ Abstract class Base
     
     if (false === strpos(\$root, '$userRoot')) {
         \$root = \$_SERVER['DOCUMENT_ROOT'] . "/$userRoot";
-    }   
+    }
+    
+    \$root = str_replace('public/', '', \$root);
     
   \$zip = new ZipArchive();
   \$res = \$zip->open("\$root/$zipFile");
